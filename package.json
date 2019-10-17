@@ -1,0 +1,26 @@
+{
+  "name": "@smikitky/ron",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smikitky/ron.git"
+  },
+  "author": "Soichiro Miki",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smikitky/ron/issues"
+  },
+  "homepage": "https://github.com/smikitky/ron#readme",
+  "prettier": {
+    "singleQuote": true
+  },
+  "dependencies": {
+    "markdown-it": "^10.0.0"
+  },
+  "bin": {
+    "ron": "./index.js"
+  }
+}

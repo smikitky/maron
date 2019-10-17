@@ -1,0 +1,42 @@
+body {
+  line-height: 3em;
+  font-size: 11pt;
+}
+
+h2:nth-of-type(1),
+h2:nth-of-type(3) {
+  page-break-before: always;
+}
+
+h1,
+h2,
+h3 {
+  page-break-after: avoid;
+}
+
+img {
+  max-width: 90%;
+}
+
+table {
+  font-size: 80%;
+  border-top: 1.5px solid black;
+  border-bottom: 1.5px solid black;
+  border-collapse: collapse;
+  page-break-inside: avoid;
+}
+
+table th {
+  border-bottom: 1.5px solid black;
+  padding: 0 0.3em;
+}
+
+table td {
+  border-top: 1px solid silver;
+  padding: 0 1em;
+}
+
+.authors {
+  font-size: 80%;
+  line-height: 1.5em;
+}
