@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const fs = require('fs-extra');
+const md = require('markdown-it')({ html: true });
+const path = require('path');
 
 const UNUSED = 9999;
 
@@ -77,6 +79,15 @@ const replaceReferences = (file, references) => {
   return result;
 };
 
+const toHtml = () => {
+  const mdContent = fs.readFileSync('./out/index.md', 'utf8');
+  const html = md.render(mdContent);
+  const withHeaders = `<!doctype html><html><link rel='stylesheet' href='style.css'>\n${html}</html>`;
+  fs.writeFileSync('out/index.html', withHeaders, 'utf8');
+  fs.copyFileSync(path.join(__dirname, 'style.css'), './out/style.css');
+  console.log('Wrote: out/index.html');
+};
+
 const main = () => {
   const referencesFileName = './src/references.md';
   const sourceFileName = './src/index.md';
@@ -100,6 +111,7 @@ const main = () => {
   if (watchMode) {
     let recompiling = false;
     compile();
+    toHtml();
     console.log('Watching source and reference files...');
     const handler = () => {
       if (recompiling) return;
@@ -107,6 +119,7 @@ const main = () => {
       setTimeout(() => {
         console.log('Recompiling...');
         compile();
+        toHtml();
         recompiling = false;
       }, 300);
     };
@@ -114,6 +127,7 @@ const main = () => {
     fs.watch(sourceFileName, handler);
   } else {
     compile();
+    toHtml();
   }
 };
 
