@@ -21,6 +21,7 @@
     "singleQuote": true
   },
   "dependencies": {
+    "fs-extra": "^8.1.0",
     "markdown-it": "^10.0.0"
   }
 }

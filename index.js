@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const UNUSED = 9999;
 
@@ -78,8 +78,8 @@ const replaceReferences = (file, references) => {
 };
 
 const main = () => {
-  const referencesFileName = 'src/references.md';
-  const sourceFileName = 'src/index.md';
+  const referencesFileName = './src/references.md';
+  const sourceFileName = './src/index.md';
 
   const compile = () => {
     const referencesFile = fs.readFileSync(referencesFileName, 'utf8');
@@ -88,7 +88,8 @@ const main = () => {
     const references = extractReferences(referencesFile);
     const result = replaceReferences(sourceFile, references);
 
-    fs.writeFileSync('out/index.md', result, 'utf8');
+    fs.ensureDirSync('./out');
+    fs.writeFileSync('./out/index.md', result, 'utf8');
     console.log('Wrote: out/index.md');
     if (Object.keys(references).some(r => r.index === UNUSED)) {
       console.log('WARNING: There are unused referece items.');

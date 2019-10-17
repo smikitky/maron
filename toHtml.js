@@ -1,5 +1,5 @@
 const md = require('markdown-it')({ html: true });
-const fs = require('fs').promises;
+const fs = require('fs-extra');
 const path = require('path');
 
 const main = async () => {
