@@ -43,13 +43,14 @@ const replaceReferences = (file, references) => {
   };
 
   const referencesList = () => {
-    return Object.keys(references)
+    const items = Object.keys(references)
       .sort((a, b) => references[a].index - references[b].index)
       .map(k => {
         const item = references[k];
-        return `${item.index}. ${item.source}`;
+        return `  <li value="${item.index}">${item.source}</li>`;
       })
       .join('\n');
+    return `<ol>\n${items}\n</ol>`;
   };
 
   const result = file
