@@ -47,7 +47,7 @@ const replaceReferences = (file, references) => {
       .sort((a, b) => references[a].index - references[b].index)
       .map(k => {
         const item = references[k];
-        return `  <li value="${item.index}">${item.source}</li>`;
+        return `  <li id="ref-${item.index}" value="${item.index}">${item.source}</li>`;
       })
       .join('\n');
     return `<ol>\n${items}\n</ol>`;
