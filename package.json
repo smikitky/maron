@@ -30,6 +30,8 @@
     "dashdash": "^1.14.1",
     "esm": "^3.2.25",
     "fs-extra": "^8.1.0",
+    "handlebars": "^4.4.5",
+    "js-yaml": "^3.13.1",
     "lodash": "^4.17.15",
     "markdown-it": "^10.0.0"
   },
