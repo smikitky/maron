@@ -26,6 +26,7 @@
     "singleQuote": true
   },
   "dependencies": {
+    "capitalize-title": "^1.0.0",
     "chokidar": "^3.2.2",
     "dashdash": "^1.14.1",
     "esm": "^3.2.25",

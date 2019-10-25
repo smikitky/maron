@@ -11,6 +11,7 @@ import _ from 'lodash';
 
 import formatReference from './formatReference';
 import formatTag from './formatTag';
+import parseIssue from './parseIssue';
 
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -68,6 +69,11 @@ const addReferences = async (sourceFileName, referencesFileName) => {
   const referencesFile = await fs.readFile(referencesFileName, 'utf8');
   const sourceFile = await fs.readFile(sourceFileName, 'utf8');
   const { references, style } = yaml.load(referencesFile);
+  Object.keys(references).forEach(tag => {
+    if (typeof references[tag].issue === 'string') {
+      references[tag].issue = parseIssue(references[tag].issue);
+    }
+  });
   const result = replaceReferences(sourceFile, references, style);
 
   await fs.ensureDir('./out');
