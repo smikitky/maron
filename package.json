@@ -1,7 +1,7 @@
 {
   "name": "@smikitky/ron",
   "version": "1.0.0",
-  "description": "",
+  "description": "Helper for writing articles with markdown",
   "main": "index.js",
   "bin": {
     "ron": "./index.js"
@@ -9,7 +9,9 @@
   "engines": {
     "node": ">=10.12"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/smikitky/ron.git"
@@ -30,5 +32,8 @@
     "fs-extra": "^8.1.0",
     "lodash": "^4.17.15",
     "markdown-it": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0"
   }
 }
