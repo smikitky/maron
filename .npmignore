@@ -1,2 +1,4 @@
 .editorconfig
 *.tgz
+coverage
+*.test.js
