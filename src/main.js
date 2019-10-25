@@ -8,6 +8,8 @@ import chokidar from 'chokidar';
 import dashdash from 'dashdash';
 import _ from 'lodash';
 
+import formatTag from './formatTag';
+
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -23,36 +25,6 @@ const extractReferences = file => {
     references[tag] = { source, index: UNUSED };
   });
   return references;
-};
-
-/**
- * Does a conversion like `[1,3,4,6,7,8]` to `'1,3,4,6-8'`.
- * @param {number[]} arr The input array.
- */
-const formatTag = arr => {
-  let min = undefined,
-    max = undefined,
-    result = '';
-
-  const flush = () => {
-    if (result) result += ',';
-    result +=
-      max > min + 1 ? min + '-' + max : max === min + 1 ? min + ',' + max : min;
-    min = max = undefined;
-  };
-
-  for (const i of arr) {
-    if (min === undefined) {
-      min = max = i;
-    } else if (i === max + 1) {
-      max = i;
-    } else {
-      flush();
-      min = max = i;
-    }
-  }
-  flush();
-  return result;
 };
 
 const replaceReferences = (file, references) => {
