@@ -39,7 +39,7 @@ const replaceReferences = (file, references) => {
       if (reference.index === UNUSED) reference.index = refCounter++;
       if (indexes.indexOf(reference.index) < 0) indexes.push(reference.index);
     });
-    return '[' + formatTag(indexes.sort()) + ']';
+    return '[' + formatTag(indexes) + ']';
   };
 
   const referencesList = () => {
