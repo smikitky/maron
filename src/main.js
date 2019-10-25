@@ -6,8 +6,10 @@ import path from 'path';
 import url from 'url'; // Node >= 10.12 required
 import chokidar from 'chokidar';
 import dashdash from 'dashdash';
+import yaml from 'js-yaml';
 import _ from 'lodash';
 
+import formatReference from './formatReference';
 import formatTag from './formatTag';
 
 const md = MarkdownIt({ html: true });
@@ -15,39 +17,33 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const UNUSED = 9999;
 
-const extractReferences = file => {
-  const lines = file.split('\n');
-  const references = {};
-  lines.forEach(line => {
-    const match = /^\d+\.\s+`tag:(.+)`\s+(.+)/.exec(line);
-    if (!match) return;
-    const [, tag, source] = match;
-    references[tag] = { source, index: UNUSED };
-  });
-  return references;
-};
-
-const replaceReferences = (file, references) => {
+const replaceReferences = (file, references, style) => {
   let refCounter = 1;
+  /**
+   * @type Map<string, number>
+   */
+  const tagMap = new Map();
 
   const replacer = (_, tags) => {
     const refs = tags.split(',');
     const indexes = [];
-    refs.forEach(ref => {
-      const reference = references[ref];
-      if (!reference) throw new Error('Unknown ref: ' + ref);
-      if (reference.index === UNUSED) reference.index = refCounter++;
-      if (indexes.indexOf(reference.index) < 0) indexes.push(reference.index);
+    refs.forEach(tag => {
+      const reference = references[tag];
+      if (!reference) throw new Error('Unknown ref: ' + tag);
+      if (!tagMap.has(tag)) tagMap.set(tag, refCounter++);
+      if (indexes.indexOf(tagMap.get(tag)) < 0) indexes.push(tagMap.get(tag));
     });
     return '[' + formatTag(indexes) + ']';
   };
 
   const referencesList = () => {
     const items = Object.keys(references)
-      .sort((a, b) => references[a].index - references[b].index)
+      .sort((a, b) => tagMap.get(a) - tagMap.get(b))
       .map(k => {
         const item = references[k];
-        return `  <li id="ref-${item.index}" value="${item.index}">${item.source}</li>`;
+        const index = tagMap.get(k);
+        const formatted = formatReference(item, style);
+        return `  <li id="ref-${index}" value="${index}">${formatted}</li>`;
       })
       .join('\n');
     return `<ol>\n${items}\n</ol>`;
@@ -71,8 +67,8 @@ const toHtml = async () => {
 const addReferences = async (sourceFileName, referencesFileName) => {
   const referencesFile = await fs.readFile(referencesFileName, 'utf8');
   const sourceFile = await fs.readFile(sourceFileName, 'utf8');
-  const references = extractReferences(referencesFile);
-  const result = replaceReferences(sourceFile, references);
+  const { references, style } = yaml.load(referencesFile);
+  const result = replaceReferences(sourceFile, references, style);
 
   await fs.ensureDir('./out');
   await fs.writeFile('./out/index.md', result, 'utf8');
@@ -83,7 +79,7 @@ const addReferences = async (sourceFileName, referencesFileName) => {
 };
 
 const main = async () => {
-  const referencesFileName = './src/references.md';
+  const referencesFileName = './src/references.yaml';
   const sourceFileName = './src/index.md';
 
   const options = dashdash.parse({
