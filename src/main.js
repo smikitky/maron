@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from 'fs-extra';
 import MarkdownIt from 'markdown-it';
 import path from 'path';
