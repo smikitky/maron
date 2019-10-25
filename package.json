@@ -24,8 +24,11 @@
     "singleQuote": true
   },
   "dependencies": {
+    "chokidar": "^3.2.2",
+    "dashdash": "^1.14.1",
     "esm": "^3.2.25",
     "fs-extra": "^8.1.0",
+    "lodash": "^4.17.15",
     "markdown-it": "^10.0.0"
   }
 }

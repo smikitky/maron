@@ -4,6 +4,9 @@ import fs from 'fs-extra';
 import MarkdownIt from 'markdown-it';
 import path from 'path';
 import url from 'url'; // Node >= 10.12 required
+import chokidar from 'chokidar';
+import dashdash from 'dashdash';
+import _ from 'lodash';
 
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -83,55 +86,56 @@ const replaceReferences = (file, references) => {
   return result;
 };
 
-const toHtml = () => {
-  const mdContent = fs.readFileSync('./out/index.md', 'utf8');
+const toHtml = async () => {
+  const mdContent = await fs.readFile('./out/index.md', 'utf8');
   const html = md.render(mdContent);
   const withHeaders = `<!doctype html><html><link rel='stylesheet' href='style.css'>\n${html}</html>`;
-  fs.writeFileSync('out/index.html', withHeaders, 'utf8');
-  fs.copyFileSync(path.join(__dirname, 'style.css'), './out/style.css');
+  await fs.writeFile('out/index.html', withHeaders, 'utf8');
+  await fs.copyFile(path.join(__dirname, 'style.css'), './out/style.css');
   console.log('Wrote: out/index.html');
 };
 
-const main = () => {
+const addReferences = async (sourceFileName, referencesFileName) => {
+  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
+  const sourceFile = await fs.readFile(sourceFileName, 'utf8');
+  const references = extractReferences(referencesFile);
+  const result = replaceReferences(sourceFile, references);
+
+  await fs.ensureDir('./out');
+  await fs.writeFile('./out/index.md', result, 'utf8');
+  console.log('Wrote: out/index.md');
+  if (Object.keys(references).some(r => r.index === UNUSED)) {
+    console.log('WARNING: There are unused referece items.');
+  }
+};
+
+const main = async () => {
   const referencesFileName = './src/references.md';
   const sourceFileName = './src/index.md';
 
-  const compile = () => {
-    const referencesFile = fs.readFileSync(referencesFileName, 'utf8');
-    const sourceFile = fs.readFileSync(sourceFileName, 'utf8');
+  const options = dashdash.parse({
+    options: [
+      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files.' }
+    ]
+  });
 
-    const references = extractReferences(referencesFile);
-    const result = replaceReferences(sourceFile, references);
-
-    fs.ensureDirSync('./out');
-    fs.writeFileSync('./out/index.md', result, 'utf8');
-    console.log('Wrote: out/index.md');
-    if (Object.keys(references).some(r => r.index === UNUSED)) {
-      console.log('WARNING: There are unused referece items.');
-    }
+  const run = async () => {
+    await addReferences(sourceFileName, referencesFileName);
+    await toHtml();
   };
 
-  const watchMode = !!process.argv.find(a => a === '-w' || a === '--watch');
-  if (watchMode) {
+  await run();
+
+  if (options.watch) {
     let recompiling = false;
-    compile();
-    toHtml();
     console.log('Watching source and reference files...');
-    const handler = () => {
+    const handler = _.debounce(() => {
       if (recompiling) return;
       recompiling = true;
-      setTimeout(() => {
-        console.log('Recompiling...');
-        compile();
-        toHtml();
-        recompiling = false;
-      }, 300);
-    };
-    fs.watch(referencesFileName, handler);
-    fs.watch(sourceFileName, handler);
-  } else {
-    compile();
-    toHtml();
+      console.log('Recompiling...');
+      run().then(() => (recompiling = false));
+    }, 300);
+    chokidar.watch('./src').on('change', handler);
   }
 };
 
