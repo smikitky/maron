@@ -63,15 +63,27 @@ const toHtml = async () => {
   console.log('Wrote: out/index.html');
 };
 
+const parseReferences = data => {
+  const parseReference = refData => {
+    return {
+      ...refData,
+      issue:
+        typeof refData.issue === 'string'
+          ? parseIssue(refData.issue)
+          : refData.issue
+    };
+  };
+
+  return {
+    ...data,
+    references: _.mapValues(data.references, parseReference)
+  };
+};
+
 const addReferences = async (sourceFileName, referencesFileName) => {
-  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
   const sourceFile = await fs.readFile(sourceFileName, 'utf8');
-  const { references, style } = yaml.load(referencesFile);
-  Object.keys(references).forEach(tag => {
-    if (typeof references[tag].issue === 'string') {
-      references[tag].issue = parseIssue(references[tag].issue);
-    }
-  });
+  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
+  const { references, style } = parseReferences(yaml.load(referencesFile));
   const result = replaceReferences(sourceFile, references, style);
 
   await fs.ensureDir('./out');
@@ -88,7 +100,7 @@ const main = async () => {
 
   const options = dashdash.parse({
     options: [
-      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files.' }
+      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' }
     ]
   });
 
