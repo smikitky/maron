@@ -1,15 +1,16 @@
 import Handlebars from 'handlebars';
 import capitalizeTitle from 'capitalize-title';
 
-export const authorList = (text, { max = 3, etal = ' et al' } = {}) => {
-  const list = text
-    .replace(/\s+et al\.$/, '')
-    .split(/,/)
-    .map(s => s.trim());
-  if (list.length > max) {
-    return list.slice(0, max).join(', ') + etal;
+export const authorList = (
+  authors,
+  { max = 3, delimiter = ', ', etal = ' et al' } = {}
+) => {
+  const hasEtAl = authors[authors.length - 1] === 'ET_AL';
+  if (hasEtAl) authors = authors.slice(0, authors.length - 1);
+  if (authors.length > max) {
+    return authors.slice(0, max).join(', ') + etal;
   } else {
-    return list.join(', ');
+    return authors.join(delimiter);
   }
 };
 

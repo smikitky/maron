@@ -64,13 +64,14 @@ const toHtml = async () => {
 };
 
 const parseReferences = data => {
-  const parseReference = refData => {
+  const parseReference = ref => {
     return {
-      ...refData,
-      issue:
-        typeof refData.issue === 'string'
-          ? parseIssue(refData.issue)
-          : refData.issue
+      ...ref,
+      authors:
+        typeof ref.authors === 'string'
+          ? parseAuthors(ref.authors)
+          : ref.authors,
+      issue: typeof ref.issue === 'string' ? parseIssue(ref.issue) : ref.issue
     };
   };
 
