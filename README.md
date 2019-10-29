@@ -35,10 +35,17 @@ Ron is a helper script for writing manuscripts in markdown.
    `references`
    ```
 
-1. Your reference list should be places as `src/references.md`.
+1. Your reference list should be places as `src/references.yaml`. `references` is the list of your references. `style` is a handlebar template that defines how your references will be stringified.
 
-   ```md
-   1. `tag:doe2015` John Doe. Global Warming. Science (2015) 1(2) 100-105.
+   ```yaml
+   style: >
+     {{authorList authors max=3}}. <b>{{capitalize title}}</b>. {{journal}} {{issue.year}};{{issue.volume}}({{issue.issue}}): {{{pages issue.pages compact=true delim='&ndash;'}}}.
+   references:
+     yamada2010:
+       authors: T Yamada, I Suzuki, H Eto et al.
+       title: 'Alice in Wonderland'
+       journal: Science
+       issue: '2010;5(6): 1038-1053'
    ```
 
 1. Compile.
