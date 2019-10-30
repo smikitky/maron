@@ -6,6 +6,7 @@ import glob from 'glob-promise';
 import chokidar from 'chokidar';
 import dashdash from 'dashdash';
 import yaml from 'js-yaml';
+import escape from 'escape-html';
 import _ from 'lodash';
 
 import formatReference from './formatReference';
@@ -13,37 +14,69 @@ import formatTag from './formatTag';
 import parseIssue from './parseIssue';
 import parseAuthors from './parseAuthors';
 import convertToTiff from './convertToTiff';
+import createReporter from './reporter';
 
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-const UNUSED = 9999;
-
-const replaceReferences = (file, references, style) => {
+const replaceReferences = (
+  { sourceFile, references, style, figures, useLink },
+  reporter
+) => {
   let refCounter = 1;
-  /**
-   * @type Map<string, number>
-   */
-  const tagMap = new Map();
+  const refTagMap = new Map();
+  let figCounter = 1;
+  const figTagMap = new Map();
 
-  const replacer = (_, tags) => {
+  const refReplacer = (_, tags) => {
     const refs = tags.split(',');
     const indexes = [];
     refs.forEach(tag => {
       const reference = references[tag];
-      if (!reference) throw new Error('Unknown ref: ' + tag);
-      if (!tagMap.has(tag)) tagMap.set(tag, refCounter++);
-      if (indexes.indexOf(tagMap.get(tag)) < 0) indexes.push(tagMap.get(tag));
+      if (!reference) throw new Error('Unknown reference tag: ' + tag);
+      if (!refTagMap.has(tag)) {
+        const refIndex = refCounter++;
+        refTagMap.set(tag, refIndex);
+        reporter.info(`ref #${refIndex} = ${tag}`);
+      }
+      if (indexes.indexOf(refTagMap.get(tag)) < 0)
+        indexes.push(refTagMap.get(tag));
     });
-    return '[' + formatTag(indexes) + ']';
+    const formattedTag = formatTag(indexes);
+    const linked = formattedTag.replace(/(\d+)/g, (_, index) => {
+      const tag = Array.from(refTagMap.entries()).find(
+        ([t, i]) => i === Number(index)
+      )[0];
+      const ref = references[tag];
+      return useLink
+        ? `<a href="#ref-${index}" title="${escape(ref.title)}">${index}</a>`
+        : `${index}`;
+    });
+    return '[' + linked + ']';
+  };
+
+  const figReplacer = (_, tag) => {
+    const figure = figures.find(f => f.tag === tag);
+    if (!figure) throw new Error('Unknown figure tag: ' + tag);
+    const index = figTagMap.has(tag)
+      ? figTagMap.get(tag)
+      : (() => {
+          const index = figCounter++;
+          figTagMap.set(tag, index);
+          reporter.info(`figure #${index} = ${tag}`);
+          return index;
+        })();
+    return useLink
+      ? `<a href="#fig-${index}" title="${tag}">${index}</a>`
+      : `${index}`;
   };
 
   const referencesList = () => {
     const items = Object.keys(references)
-      .sort((a, b) => tagMap.get(a) - tagMap.get(b))
+      .sort((a, b) => refTagMap.get(a) - refTagMap.get(b))
       .map(k => {
         const item = references[k];
-        const index = tagMap.get(k);
+        const index = refTagMap.get(k);
         const formatted = formatReference(item, style);
         return `  <li id="ref-${index}" value="${index}">${formatted}</li>`;
       })
@@ -51,19 +84,37 @@ const replaceReferences = (file, references, style) => {
     return `<ol>\n${items}\n</ol>`;
   };
 
-  const result = file
-    .replace(/`ref:(.+?)`/g, replacer)
-    .replace(/`references`/g, referencesList);
+  const figuresList = () => {
+    const items = figures
+      .map(f => f.tag)
+      .sort((a, b) => figTagMap.get(a) - figTagMap.get(b))
+      .map(tag => {
+        const index = figTagMap.get(tag);
+        if (typeof index !== 'number') {
+          reporter.warn('Unused figure: ' + tag);
+          return;
+        }
+        const figure = figures.find(f => f.tag === tag);
+        return `<figure id="fig-${index}"><caption><b>Figure ${index}</b> ${figure.caption}</caption></figure>`;
+      });
+    return items.join('\n');
+  };
+
+  const result = sourceFile
+    .replace(/`ref:(.+?)`/g, refReplacer)
+    .replace(/`fig:(.+?)`/g, figReplacer)
+    .replace(/`references`/g, referencesList)
+    .replace(/`figures`/g, figuresList);
   return result;
 };
 
-const toHtml = async () => {
-  const mdContent = await fs.readFile('./out/index.md', 'utf8');
-  const html = md.render(mdContent);
+const toHtml = async (ctx, reporter) => {
+  reporter.section('Generating HTML...');
+  const html = md.render(ctx.processedMd);
   const withHeaders = `<!doctype html><html><link rel='stylesheet' href='style.css'>\n${html}</html>`;
   await fs.writeFile('out/index.html', withHeaders, 'utf8');
   await fs.copyFile(path.join(__dirname, 'style.css'), './out/style.css');
-  console.log('Wrote: out/index.html');
+  reporter.output('out/index.html');
 };
 
 const parseReferences = data => {
@@ -84,45 +135,70 @@ const parseReferences = data => {
   };
 };
 
-const addReferences = async (sourceFileName, referencesFileName) => {
-  const sourceFile = await fs.readFile(sourceFileName, 'utf8');
-  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
-  const { references, style } = parseReferences(yaml.load(referencesFile));
-  const result = replaceReferences(sourceFile, references, style);
+const addReferences = async (ctx, reporter) => {
+  reporter.section('Processing References...');
+  const result = replaceReferences(ctx, reporter);
 
   await fs.ensureDir('./out');
   await fs.writeFile('./out/index.md', result, 'utf8');
-  console.log('Wrote: out/index.md');
-  if (Object.keys(references).some(r => r.index === UNUSED)) {
-    console.log('WARNING: There are unused referece items.');
-  }
+  reporter.output('out/index.md');
+  ctx.processedMd = result;
 };
 
-const convertImages = async sourceDir => {
+const convertImages = async (ctx, reporter) => {
+  const { sourceDir } = ctx;
+  reporter.section('Converting Images...');
   const pdfs = await glob(path.resolve(sourceDir, '**/*.pdf'));
   for (const file of pdfs) {
     const relative = path.relative(sourceDir, file);
     const outFile = path.join('./out', relative).replace(/pdf$/i, 'tiff');
     await convertToTiff(file, outFile, { resolution: 300 });
-    console.log(`Wrote: ${outFile}`);
+    reporter.output(outFile);
   }
+  reporter.log(`Output ${pdfs.length} image(s).`);
+};
+
+const createContext = async (sourceDir, useLink, reporter) => {
+  reporter.section('Loading source files...');
+  const sourceFileName = path.join(sourceDir, 'index.md');
+  const sourceFile = await fs.readFile(sourceFileName, 'utf8');
+
+  const referencesFileName = path.join(sourceDir, 'references.yaml');
+  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
+  const { references, style } = parseReferences(yaml.load(referencesFile));
+  reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
+
+  let figures = [];
+  try {
+    const figuresFileName = path.join(sourceDir, 'figures.yaml');
+    const figuresFile = await fs.readFile(figuresFileName, 'utf8');
+    figures = yaml.load(figuresFile);
+    reporter.log(`Loaded ${figures.length} figure items.`);
+  } catch (err) {
+    reporter.warn('No figures.yaml found.');
+  }
+
+  return { sourceDir, sourceFile, references, style, figures, useLink };
 };
 
 const main = async () => {
   const sourceDir = './src';
-  const referencesFileName = path.join(sourceDir, 'references.yaml');
-  const sourceFileName = path.join(sourceDir, 'index.md');
 
   const options = dashdash.parse({
     options: [
-      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' }
+      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' },
+      { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
+      { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' }
     ]
   });
 
+  const reporter = createReporter(options.verbose);
+
   const run = async () => {
-    await addReferences(sourceFileName, referencesFileName);
-    await convertImages(sourceDir);
-    await toHtml();
+    const ctx = await createContext(sourceDir, !options.no_link, reporter);
+    await addReferences(ctx, reporter);
+    await convertImages(ctx, reporter);
+    await toHtml(ctx, reporter);
   };
 
   await run();
