@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import MarkdownIt from 'markdown-it';
 import path from 'path';
 import url from 'url'; // Node >= 10.12 required
+import glob from 'glob-promise';
 import chokidar from 'chokidar';
 import dashdash from 'dashdash';
 import yaml from 'js-yaml';
@@ -10,6 +11,8 @@ import _ from 'lodash';
 import formatReference from './formatReference';
 import formatTag from './formatTag';
 import parseIssue from './parseIssue';
+import parseAuthors from './parseAuthors';
+import convertToTiff from './convertToTiff';
 
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -95,9 +98,20 @@ const addReferences = async (sourceFileName, referencesFileName) => {
   }
 };
 
+const convertImages = async sourceDir => {
+  const pdfs = await glob(path.resolve(sourceDir, '**/*.pdf'));
+  for (const file of pdfs) {
+    const relative = path.relative(sourceDir, file);
+    const outFile = path.join('./out', relative).replace(/pdf$/i, 'tiff');
+    await convertToTiff(file, outFile, { resolution: 300 });
+    console.log(`Wrote: ${outFile}`);
+  }
+};
+
 const main = async () => {
-  const referencesFileName = './src/references.yaml';
-  const sourceFileName = './src/index.md';
+  const sourceDir = './src';
+  const referencesFileName = path.join(sourceDir, 'references.yaml');
+  const sourceFileName = path.join(sourceDir, 'index.md');
 
   const options = dashdash.parse({
     options: [
@@ -107,6 +121,7 @@ const main = async () => {
 
   const run = async () => {
     await addReferences(sourceFileName, referencesFileName);
+    await convertImages(sourceDir);
     await toHtml();
   };
 
