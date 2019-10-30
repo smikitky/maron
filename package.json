@@ -27,12 +27,15 @@
   },
   "dependencies": {
     "capitalize-title": "^1.0.0",
+    "chalk": "^2.4.2",
     "chokidar": "^3.2.2",
     "dashdash": "^1.14.1",
+    "escape-html": "^1.0.3",
     "esm": "^3.2.25",
     "fs-extra": "^8.1.0",
     "glob-promise": "^3.4.0",
     "handlebars": "^4.4.5",
+    "indent-string": "^4.0.0",
     "js-yaml": "^3.13.1",
     "lodash": "^4.17.15",
     "markdown-it": "^10.0.0"
