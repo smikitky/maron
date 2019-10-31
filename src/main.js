@@ -164,6 +164,8 @@ const convertImages = async (ctx, reporter) => {
     }
     const inFile = files[0];
 
+    reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
+
     const tiffOut = path.join('./out', `fig-${index}.tiff`);
     await convertImage(inFile, tiffOut, { resolution: figure.resolution });
     reporter.output(tiffOut);
@@ -172,9 +174,15 @@ const convertImages = async (ctx, reporter) => {
     await convertImage(inFile, pngOut, { resolution: 72 });
     reporter.output(pngOut);
   }
-  reporter.log(`Converted ${figTagMap.size} PDF(s).`);
+  reporter.log(`Converted ${figTagMap.size} source image(s).`);
 };
 
+/**
+ * Load source files into memory.
+ * @param {string} sourceDir
+ * @param {boolean} useLink
+ * @param {ReturnType<createReporter>} reporter
+ */
 const createContext = async (sourceDir, useLink, reporter) => {
   reporter.section('Loading source files...');
   const sourceFileName = path.join(sourceDir, 'index.md');
@@ -188,7 +196,11 @@ const createContext = async (sourceDir, useLink, reporter) => {
     ({ references, style } = parseReferences(yaml.load(referencesFile)));
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   } catch (err) {
-    reporter.warn('Failed to load references.yaml.');
+    if (err.code === 'ENOENT') {
+      reporter.warn('references.yaml not found.');
+    } else {
+      throw new Error('Failed to load references.yaml: ' + err.message);
+    }
   }
 
   let figures = [];
@@ -207,13 +219,35 @@ const createContext = async (sourceDir, useLink, reporter) => {
 const main = async () => {
   const sourceDir = './src';
 
-  const options = dashdash.parse({
+  const parser = dashdash.createParser({
     options: [
       { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' },
       { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
-      { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' }
+      { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' },
+      { names: ['help', 'h'], type: 'bool', help: 'Prints this message' },
+      { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' }
     ]
   });
+
+  const help = () => {
+    console.log('ron - Markdown utility for academic writing\n');
+    console.log('Usage: npx ron [options]');
+    console.log(parser.help());
+  };
+
+  let options;
+  try {
+    options = parser.parse(process.argv);
+  } catch (err) {
+    console.error(err.message);
+    help();
+    process.exit(1);
+  }
+
+  if (options.help) {
+    help();
+    process.exit(0);
+  }
 
   const reporter = createReporter(options.verbose);
 
@@ -236,6 +270,7 @@ const main = async () => {
     const handler = _.debounce(() => {
       if (recompiling) return;
       recompiling = true;
+      if (options.clear) console.clear();
       console.log('Recompiling...');
       run().then(() => (recompiling = false));
     }, 300);
