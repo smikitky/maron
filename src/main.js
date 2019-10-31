@@ -16,12 +16,13 @@ import parseIssue from './parseIssue';
 import parseAuthors from './parseAuthors';
 import convertImage from './convertImage';
 import createReporter from './reporter';
+import readFileIfExists from './readFileIfExists';
 
 const md = MarkdownIt({ html: true }).use(attrs);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const replaceReferences = (ctx, reporter) => {
-  const { sourceFile, references, style, figures, useLink } = ctx;
+  const { sourceFile, references, style, figures, options } = ctx;
   let refCounter = 1;
   const refTagMap = new Map();
   let figCounter = 1;
@@ -47,9 +48,9 @@ const replaceReferences = (ctx, reporter) => {
         ([t, i]) => i === Number(index)
       )[0];
       const ref = references[tag];
-      return useLink
-        ? `<a href="#ref-${index}" title="${escape(ref.title)}">${index}</a>`
-        : `${index}`;
+      return options.no_link
+        ? `${index}`
+        : `<a href="#ref-${index}" title="${escape(ref.title)}">${index}</a>`;
     });
     return '[' + linked + ']';
   };
@@ -65,9 +66,9 @@ const replaceReferences = (ctx, reporter) => {
           reporter.info(`figure #${index} = ${tag}`);
           return index;
         })();
-    return useLink
-      ? `<a href="#fig-${index}" title="${tag}">${index}</a>`
-      : `${index}`;
+    return options.no_link
+      ? `${index}`
+      : `<a href="#fig-${index}" title="${tag}">${index}</a>`;
   };
 
   const referencesList = () => {
@@ -118,8 +119,24 @@ const toHtml = async (ctx, reporter) => {
   const html = md.render(ctx.processedMd);
   const withHeaders = `<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body>${html}</body></html>`;
   await fs.writeFile('out/index.html', withHeaders, 'utf8');
-  await fs.copyFile(path.join(__dirname, 'style.css'), './out/style.css');
   reporter.output('out/index.html');
+
+  const defaultCss = await fs.readFile(
+    path.join(__dirname, 'style.css'),
+    'utf8'
+  );
+  const customCss = await readFileIfExists(
+    path.join(ctx.sourceDir, 'style.css')
+  );
+  if (customCss) {
+    reporter.log('Loaded custom style.css.');
+  } else {
+    reporter.info('Custom style.css not found.');
+  }
+
+  const cssFile = path.join('out', 'style.css');
+  await fs.writeFile(cssFile, defaultCss + '\n\n' + customCss);
+  reporter.output(cssFile);
 };
 
 const parseReferences = data => {
@@ -145,8 +162,9 @@ const addReferences = async (ctx, reporter) => {
   const result = replaceReferences(ctx, reporter);
 
   await fs.ensureDir('./out');
-  await fs.writeFile('./out/index.md', result, 'utf8');
-  reporter.output(path.join('.out', 'index.md'));
+  const mdFile = path.join('out', 'index.md');
+  await fs.writeFile(mdFile, result, 'utf8');
+  reporter.output(mdFile);
   ctx.processedMd = result;
 };
 
@@ -180,40 +198,37 @@ const convertImages = async (ctx, reporter) => {
 /**
  * Load source files into memory.
  * @param {string} sourceDir
- * @param {boolean} useLink
+ * @param {object} options
  * @param {ReturnType<createReporter>} reporter
  */
-const createContext = async (sourceDir, useLink, reporter) => {
-  reporter.section('Loading source files...');
+const createContext = async (sourceDir, options, reporter) => {
+  reporter.section('Loading Source files...');
   const sourceFileName = path.join(sourceDir, 'index.md');
-  const sourceFile = await fs.readFile(sourceFileName, 'utf8');
+  const sourceFile = await readFileIfExists(sourceFileName);
+  if (!sourceFile) throw new Error('Source file not found.');
 
   let references = {};
   let style = '{{authors}} {{title}}';
   const referencesFileName = path.join(sourceDir, 'references.yaml');
-  try {
-    const referencesFile = await fs.readFile(referencesFileName, 'utf8');
+  const referencesFile = await readFileIfExists(referencesFileName);
+  if (!referencesFile) {
+    reporter.warn('references.yaml not found.');
+  } else {
     ({ references, style } = parseReferences(yaml.load(referencesFile)));
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      reporter.warn('references.yaml not found.');
-    } else {
-      throw new Error('Failed to load references.yaml: ' + err.message);
-    }
   }
 
   let figures = [];
-  try {
-    const figuresFileName = path.join(sourceDir, 'figures.yaml');
-    const figuresFile = await fs.readFile(figuresFileName, 'utf8');
+  const figuresFileName = path.join(sourceDir, 'figures.yaml');
+  const figuresFile = await readFileIfExists(figuresFileName);
+  if (!figuresFile) {
+    reporter.warn('figures.yaml not found.');
+  } else {
     figures = yaml.load(figuresFile);
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
-  } catch (err) {
-    reporter.warn('No figures.yaml found.');
   }
 
-  return { sourceDir, sourceFile, references, style, figures, useLink };
+  return { sourceDir, sourceFile, references, style, figures, options };
 };
 
 const main = async () => {
@@ -253,7 +268,7 @@ const main = async () => {
 
   const run = async () => {
     try {
-      const ctx = await createContext(sourceDir, !options.no_link, reporter);
+      const ctx = await createContext(sourceDir, options, reporter);
       await addReferences(ctx, reporter);
       await convertImages(ctx, reporter);
       await toHtml(ctx, reporter);
