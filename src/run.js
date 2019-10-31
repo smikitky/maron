@@ -80,13 +80,10 @@ const replaceReferences = (ctx, reporter) => {
 
   const figuresList = () => {
     const items = Object.keys(figures)
+      .filter(f => figTagMap.has(f))
       .sort((a, b) => figTagMap.get(a) - figTagMap.get(b))
       .map(tag => {
         const index = figTagMap.get(tag);
-        if (typeof index !== 'number') {
-          reporter.warn('Unused figure: ' + tag);
-          return;
-        }
         const figure = figures[tag];
         return (
           `<figure id="fig-${index}">\n` +
