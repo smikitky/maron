@@ -1,6 +1,6 @@
 {
   "name": "@smikitky/ron",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Helper for writing articles with markdown",
   "main": "index.js",
   "bin": {
