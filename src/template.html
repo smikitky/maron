@@ -4,5 +4,25 @@
 </head>
 <body>
 {{{html}}}
+
+{{#if useLink}}
+<script>
+  document.querySelectorAll('.ref,.fig').forEach(elem => {
+    const link = document.createElement('a');
+    link.innerHTML = elem.outerHTML;
+    const type = elem.className;
+    link.setAttribute('href', `#${type}-${elem.innerHTML}`);
+    elem.parentNode.insertBefore(link, elem);
+    elem.remove();
+  });
+</script>
+{{/if}}
+<script>
+  document.querySelectorAll('.ref').forEach(elem => {
+    const index = elem.textContent;
+    const ref = document.querySelector(`#ref-${index}`);
+    elem.title = ref.textContent;
+  });
+</script>
 </body>
 </html>
