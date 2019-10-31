@@ -29,7 +29,7 @@ const convertImage = async (inFile, outFile, options = {}) => {
     : [];
 
   // prettier-ignore
-  const { code } = await exec('magick', [
+  const { code, stderr } = await exec('magick', [
     'convert',
     ...rasterResolutionOption,
     inFile,
@@ -37,6 +37,7 @@ const convertImage = async (inFile, outFile, options = {}) => {
     '-density', resolution, // Set output resolution of rasterized image
     outFile
   ]);
+  if (code !== 0) throw new Error(stderr);
   return code === 0;
 };
 
