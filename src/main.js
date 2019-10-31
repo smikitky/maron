@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import MarkdownIt from 'markdown-it';
+import attrs from 'markdown-it-attrs';
 import path from 'path';
 import url from 'url'; // Node >= 10.12 required
 import glob from 'glob-promise';
@@ -16,7 +17,7 @@ import parseAuthors from './parseAuthors';
 import convertImage from './convertImage';
 import createReporter from './reporter';
 
-const md = MarkdownIt({ html: true });
+const md = MarkdownIt({ html: true }).use(attrs);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const replaceReferences = (ctx, reporter) => {
