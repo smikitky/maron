@@ -242,7 +242,7 @@ const run = async (sourceDir, options) => {
     await convertImages(ctx, reporter);
     await toHtml(ctx, reporter);
   } catch (err) {
-    reporter.error(err);
+    reporter.error(err.message);
   }
 };
 
