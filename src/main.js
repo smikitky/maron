@@ -116,7 +116,7 @@ const replaceReferences = (ctx, reporter) => {
 const toHtml = async (ctx, reporter) => {
   reporter.section('Generating HTML...');
   const html = md.render(ctx.processedMd);
-  const withHeaders = `<!doctype html><html><link rel='stylesheet' href='style.css'>\n${html}</html>`;
+  const withHeaders = `<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body>${html}</body></html>`;
   await fs.writeFile('out/index.html', withHeaders, 'utf8');
   await fs.copyFile(path.join(__dirname, 'style.css'), './out/style.css');
   reporter.output('out/index.html');
