@@ -5,7 +5,6 @@ import url from 'url'; // Node >= 10.12 required
 import fs from 'fs-extra';
 import glob from 'glob-promise';
 import yaml from 'js-yaml';
-import escape from 'escape-html';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
 
@@ -21,7 +20,7 @@ const md = MarkdownIt({ html: true }).use(attrs);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const replaceReferences = (ctx, reporter) => {
-  const { sourceFile, references, style, figures, options } = ctx;
+  const { sourceFile, references, style, figures } = ctx;
   let refCounter = 1;
   const refTagMap = new Map();
   let figCounter = 1;
@@ -41,17 +40,11 @@ const replaceReferences = (ctx, reporter) => {
       if (indexes.indexOf(refTagMap.get(tag)) < 0)
         indexes.push(refTagMap.get(tag));
     });
-    const formattedTag = formatTag(indexes);
-    const linked = formattedTag.replace(/(\d+)/g, (_, index) => {
-      const tag = Array.from(refTagMap.entries()).find(
-        ([t, i]) => i === Number(index)
-      )[0];
-      const ref = references[tag];
-      return options.no_link
-        ? `${index}`
-        : `<a href="#ref-${index}" title="${escape(ref.title)}">${index}</a>`;
-    });
-    return '[' + linked + ']';
+    return (
+      '[' +
+      formatTag(indexes).replace(/(\d+)/g, '<span class="ref">$1</span>') +
+      ']'
+    );
   };
 
   const figReplacer = (_, tag) => {
@@ -65,9 +58,7 @@ const replaceReferences = (ctx, reporter) => {
           reporter.info(`figure #${index} = ${tag}`);
           return index;
         })();
-    return options.no_link
-      ? `${index}`
-      : `<a href="#fig-${index}" title="${tag}">${index}</a>`;
+    return `<span class="fig">${index}</span>`;
   };
 
   const referencesList = () => {
@@ -120,7 +111,10 @@ const toHtml = async (ctx, reporter) => {
     path.join(__dirname, 'template.html'),
     'utf8'
   );
-  const result = Handlebars.compile(template)({ html });
+  const result = Handlebars.compile(template)({
+    html,
+    useLink: !ctx.options.no_link
+  });
   await fs.writeFile('out/index.html', result, 'utf8');
   reporter.output('out/index.html');
 
