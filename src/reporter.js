@@ -9,7 +9,7 @@ const createReporter = (verbose = false) => {
     console.log(indent(data, 2));
   };
   const output = name => {
-    log(chalk.cyan('Wrote:') + ' ' + name);
+    log(chalk.cyan('WROTE') + ' ' + name);
   };
   const info = data => {
     if (verbose) log(data);
@@ -17,7 +17,10 @@ const createReporter = (verbose = false) => {
   const warn = data => {
     log(chalk.yellow('WARN') + ' ' + data);
   };
-  return { section, log, output, info, warn };
+  const error = data => {
+    log(chalk.red('ERR') + ' ' + data);
+  };
+  return { section, log, output, info, warn, error };
 };
 
 export default createReporter;
