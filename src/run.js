@@ -7,6 +7,7 @@ import glob from 'glob-promise';
 import yaml from 'js-yaml';
 import escape from 'escape-html';
 import _ from 'lodash';
+import Handlebars from 'handlebars';
 
 import createReporter from './reporter';
 import formatReference from './formatReference';
@@ -115,8 +116,12 @@ const replaceReferences = (ctx, reporter) => {
 const toHtml = async (ctx, reporter) => {
   reporter.section('Generating HTML...');
   const html = md.render(ctx.processedMd);
-  const withHeaders = `<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body>${html}</body></html>`;
-  await fs.writeFile('out/index.html', withHeaders, 'utf8');
+  const template = await fs.readFile(
+    path.join(__dirname, 'template.html'),
+    'utf8'
+  );
+  const result = Handlebars.compile(template)({ html });
+  await fs.writeFile('out/index.html', result, 'utf8');
   reporter.output('out/index.html');
 
   const defaultCss = await fs.readFile(
