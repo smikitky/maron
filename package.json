@@ -33,6 +33,7 @@
     "escape-html": "^1.0.3",
     "esm": "^3.2.25",
     "fs-extra": "^8.1.0",
+    "glob": "^7.1.5",
     "glob-promise": "^3.4.0",
     "handlebars": "^4.4.5",
     "indent-string": "^4.0.0",
