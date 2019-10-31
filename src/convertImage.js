@@ -1,5 +1,4 @@
 import cp from 'child_process';
-import util from 'util';
 
 // const exec = util.promisify(cp.exec);
 
@@ -15,24 +14,30 @@ const exec = async (command, args) => {
 };
 
 /**
- * Converts a PDF file to TIFF using ImageMagick.
+ * Converts a PDF file to TIFF/PNG using ImageMagick.
  * ImageMagick and Ghostscript must be installed on the system.
- * @param {string} pdfFile
+ * @param {string} inFile
  * @param {string} outFile
  * @param {object} options
  */
-const convertToTiff = async (pdfFile, outFile, options = {}) => {
+const convertImage = async (inFile, outFile, options = {}) => {
   const { resolution = 600 } = options;
+
+  // PDF files will be rasterized using this resolution
+  const rasterResolutionOption = /\.pdf$/i.test(inFile)
+    ? ['-density', resolution]
+    : [];
+
   // prettier-ignore
   const { code } = await exec('magick', [
     'convert',
-    '-density', resolution, // Rasterize using this resolution
-    pdfFile,
+    ...rasterResolutionOption,
+    inFile,
     '-units', 'PixelsPerInch', // Specifying this is important
-    '-density', resolution, // Set output resolution
+    '-density', resolution, // Set output resolution of rasterized image
     outFile
   ]);
   return code === 0;
 };
 
-export default convertToTiff;
+export default convertImage;

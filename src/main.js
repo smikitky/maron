@@ -13,16 +13,14 @@ import formatReference from './formatReference';
 import formatTag from './formatTag';
 import parseIssue from './parseIssue';
 import parseAuthors from './parseAuthors';
-import convertToTiff from './convertToTiff';
+import convertImage from './convertImage';
 import createReporter from './reporter';
 
 const md = MarkdownIt({ html: true });
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-const replaceReferences = (
-  { sourceFile, references, style, figures, useLink },
-  reporter
-) => {
+const replaceReferences = (ctx, reporter) => {
+  const { sourceFile, references, style, figures, useLink } = ctx;
   let refCounter = 1;
   const refTagMap = new Map();
   let figCounter = 1;
@@ -56,7 +54,7 @@ const replaceReferences = (
   };
 
   const figReplacer = (_, tag) => {
-    const figure = figures.find(f => f.tag === tag);
+    const figure = figures[tag];
     if (!figure) throw new Error('Unknown figure tag: ' + tag);
     const index = figTagMap.has(tag)
       ? figTagMap.get(tag)
@@ -85,8 +83,7 @@ const replaceReferences = (
   };
 
   const figuresList = () => {
-    const items = figures
-      .map(f => f.tag)
+    const items = Object.keys(figures)
       .sort((a, b) => figTagMap.get(a) - figTagMap.get(b))
       .map(tag => {
         const index = figTagMap.get(tag);
@@ -94,8 +91,13 @@ const replaceReferences = (
           reporter.warn('Unused figure: ' + tag);
           return;
         }
-        const figure = figures.find(f => f.tag === tag);
-        return `<figure id="fig-${index}"><caption><b>Figure ${index}</b> ${figure.caption}</caption></figure>`;
+        const figure = figures[tag];
+        return (
+          `<figure id="fig-${index}">\n` +
+          `  <img src="fig-${index}.png" />\n` +
+          `  <figcaption><b>Figure ${index}</b> ${figure.caption}</figcaption>\n` +
+          `</figure>`
+        );
       });
     return items.join('\n');
   };
@@ -105,6 +107,8 @@ const replaceReferences = (
     .replace(/`fig:(.+?)`/g, figReplacer)
     .replace(/`references`/g, referencesList)
     .replace(/`figures`/g, figuresList);
+
+  ctx.figTagMap = figTagMap;
   return result;
 };
 
@@ -141,21 +145,33 @@ const addReferences = async (ctx, reporter) => {
 
   await fs.ensureDir('./out');
   await fs.writeFile('./out/index.md', result, 'utf8');
-  reporter.output('out/index.md');
+  reporter.output(path.join('.out', 'index.md'));
   ctx.processedMd = result;
 };
 
 const convertImages = async (ctx, reporter) => {
-  const { sourceDir } = ctx;
+  const { sourceDir, figures, figTagMap } = ctx;
   reporter.section('Converting Images...');
-  const pdfs = await glob(path.resolve(sourceDir, '**/*.pdf'));
-  for (const file of pdfs) {
-    const relative = path.relative(sourceDir, file);
-    const outFile = path.join('./out', relative).replace(/pdf$/i, 'tiff');
-    await convertToTiff(file, outFile, { resolution: 300 });
-    reporter.output(outFile);
+  for (const [tag, index] of figTagMap.entries()) {
+    const figure = figures[tag];
+    const files = await glob(path.resolve(sourceDir, tag + '.{jpg,png,pdf}'));
+    if (files.length === 0) {
+      throw new Error(`Figure "${figure.tag}" not found.`);
+    }
+    if (files.length > 1) {
+      throw new Error(`Figure "${figure.tag}" matched two or more file names.`);
+    }
+    const inFile = files[0];
+
+    const tiffOut = path.join('./out', `fig-${index}.tiff`);
+    await convertImage(inFile, tiffOut, { resolution: figure.resolution });
+    reporter.output(tiffOut);
+
+    const pngOut = path.join('./out', `fig-${index}.png`);
+    await convertImage(inFile, pngOut, { resolution: 72 });
+    reporter.output(pngOut);
   }
-  reporter.log(`Output ${pdfs.length} image(s).`);
+  reporter.log(`Converted ${figTagMap.size} PDF(s).`);
 };
 
 const createContext = async (sourceDir, useLink, reporter) => {
@@ -163,17 +179,23 @@ const createContext = async (sourceDir, useLink, reporter) => {
   const sourceFileName = path.join(sourceDir, 'index.md');
   const sourceFile = await fs.readFile(sourceFileName, 'utf8');
 
+  let references = {};
+  let style = '{{authors}} {{title}}';
   const referencesFileName = path.join(sourceDir, 'references.yaml');
-  const referencesFile = await fs.readFile(referencesFileName, 'utf8');
-  const { references, style } = parseReferences(yaml.load(referencesFile));
-  reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
+  try {
+    const referencesFile = await fs.readFile(referencesFileName, 'utf8');
+    ({ references, style } = parseReferences(yaml.load(referencesFile)));
+    reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
+  } catch (err) {
+    reporter.warn('Failed to load references.yaml.');
+  }
 
   let figures = [];
   try {
     const figuresFileName = path.join(sourceDir, 'figures.yaml');
     const figuresFile = await fs.readFile(figuresFileName, 'utf8');
     figures = yaml.load(figuresFile);
-    reporter.log(`Loaded ${figures.length} figure items.`);
+    reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   } catch (err) {
     reporter.warn('No figures.yaml found.');
   }
@@ -195,10 +217,14 @@ const main = async () => {
   const reporter = createReporter(options.verbose);
 
   const run = async () => {
-    const ctx = await createContext(sourceDir, !options.no_link, reporter);
-    await addReferences(ctx, reporter);
-    await convertImages(ctx, reporter);
-    await toHtml(ctx, reporter);
+    try {
+      const ctx = await createContext(sourceDir, !options.no_link, reporter);
+      await addReferences(ctx, reporter);
+      await convertImages(ctx, reporter);
+      await toHtml(ctx, reporter);
+    } catch (err) {
+      reporter.error(err);
+    }
   };
 
   await run();
