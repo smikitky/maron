@@ -1,9 +1,17 @@
+import _ from 'lodash';
+
 const parseIssue = str => {
   const match = str
     .trim()
-    .match(/^(\d+);\s*(\d+)\((\d+)\)\:?\s*(\d+)(\-(\d+))?$/);
+    .match(
+      /^(?<year>\d+)(\s+(?<month>[A-Za-z]+))?;\s*(?<volume>\d+)\((?<issue>\d+)\)(\:\s*|\s+)(?<startPage>\d+)(\-(?<endPage>\d+))?$/
+    );
   if (!match) throw new Error('Invalid issue format: ' + str);
-  let [, year, volume, issue, startPage, , endPage] = match.map(Number);
+  let { year, volume, issue, startPage, endPage } = _.mapValues(
+    match.groups,
+    v => Number(v)
+  );
+  const { month } = match.groups;
   if (startPage > endPage) {
     endPage = Number(
       String(startPage).slice(
@@ -13,7 +21,7 @@ const parseIssue = str => {
     );
   }
   if (!endPage) endPage = startPage;
-  return { year, volume, issue, pages: [startPage, endPage] };
+  return { year, month, volume, issue, pages: [startPage, endPage] };
 };
 
 export default parseIssue;
