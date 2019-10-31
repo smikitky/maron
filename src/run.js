@@ -7,6 +7,7 @@ import glob from 'glob-promise';
 import yaml from 'js-yaml';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
+import escape from 'escape-html';
 
 import createReporter from './reporter';
 import formatReference from './formatReference';
@@ -63,15 +64,18 @@ const replaceReferences = (ctx, reporter) => {
 
   const referencesList = () => {
     const items = Object.keys(references)
+      .filter(r => refTagMap.has(r))
       .sort((a, b) => refTagMap.get(a) - refTagMap.get(b))
       .map(k => {
         const item = references[k];
         const index = refTagMap.get(k);
-        const formatted = formatReference(item, style);
-        return `  <li id="ref-${index}" value="${index}">${formatted}</li>`;
+        const formatted = formatReference(item, style).trim();
+        return `  <li id="ref-${index}" data-doi="${escape(
+          item.doi || ''
+        )}" value="${index}">${formatted}</li>`;
       })
       .join('\n');
-    return `<ol>\n${items}\n</ol>`;
+    return `<ol class="references">\n${items}\n</ol>`;
   };
 
   const figuresList = () => {
@@ -99,6 +103,15 @@ const replaceReferences = (ctx, reporter) => {
     .replace(/`fig:(.+?)`/g, figReplacer)
     .replace(/`references`/g, referencesList)
     .replace(/`figures`/g, figuresList);
+
+  const unusedRefs = Object.keys(references).filter(r => !refTagMap.has(r));
+  if (unusedRefs.length) {
+    reporter.warn('Unused references: ' + unusedRefs.join(', '));
+  }
+  const unusedFigs = Object.keys(figures).filter(f => !figTagMap.has(f));
+  if (unusedFigs.length) {
+    reporter.warn('Unused figures: ' + unusedFigs.join(', '));
+  }
 
   ctx.figTagMap = figTagMap;
   return result;

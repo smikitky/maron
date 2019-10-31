@@ -44,3 +44,7 @@ table td {
 .title {
   font-size: 150%;
 }
+
+.doi-link {
+  margin-left: 1ex;
+}

@@ -11,9 +11,19 @@
     const link = document.createElement('a');
     link.innerHTML = elem.outerHTML;
     const type = elem.className;
-    link.setAttribute('href', `#${type}-${elem.innerHTML}`);
+    link.href = `#${type}-${elem.innerHTML}`;
     elem.parentNode.insertBefore(link, elem);
     elem.remove();
+  });
+  document.querySelectorAll('ol.references > li[data-doi]').forEach(li => {
+    const doi = li.dataset.doi;
+    if (!doi) return;
+    const link = document.createElement('a');
+    link.className = 'doi-link';
+    link.target = '_blank';
+    link.href = `http://doi.org/${doi}`;
+    link.textContent = 'DOI';
+    li.append(link);
   });
 </script>
 {{/if}}
