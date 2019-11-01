@@ -2,4 +2,6 @@
 *.tgz
 coverage
 *.test.js
+test-out
+
 .vscode
