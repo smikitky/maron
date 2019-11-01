@@ -5,6 +5,7 @@ import _ from 'lodash';
 import fs from 'fs-extra';
 import run from './run';
 import url from 'url'; // Node >= 10.12 required
+import createReporter from './reporter';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -42,24 +43,27 @@ const main = async () => {
     return;
   }
 
+  const reporter = createReporter(options.verbose);
+
   if (options.init) {
     const { src } = options;
-    console.log(`Setting up a new article under ${src}...`);
+    reporter.section('Initialize a New Ron Project...');
+    reporter.log(`Setting up a new article under ${src}...`);
     try {
       await fs.ensureDir(src);
       await fs.copy(path.resolve(__dirname, '..', 'init-template'), src, {
         overwrite: false,
         errorOnExist: true
       });
-      console.log(`Created an empty project under ${src}.`);
+      reporter.log(`Created an empty project under ${src}.`);
     } catch (err) {
-      console.error('Error while copying templates.');
-      console.error('Is your src directory empty and writable?');
+      reporter.error(err.message);
+      reporter.error('Is your src directory empty and writable?');
     }
     return;
   }
 
-  const start = () => run(options.src, options.out, options);
+  const start = () => run(options.src, options.out, options, reporter);
   await start();
 
   if (options.watch) {
