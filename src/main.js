@@ -4,22 +4,22 @@ import _ from 'lodash';
 import run from './run';
 
 const main = async () => {
-  const sourceDir = './src';
-
   const parser = dashdash.createParser({
     options: [
+      { names: ['src'], type: 'string', help: 'Source dir', default: './src' },
+      { names: ['out'], type: 'string', help: 'Output dir', default: './out' },
       { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' },
       { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
       { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' },
-      { names: ['help', 'h'], type: 'bool', help: 'Prints this message' },
-      { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' }
+      { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' },
+      { names: ['help', 'h'], type: 'bool', help: 'Prints this message' }
     ]
   });
 
   const help = () => {
     console.log('ron - Markdown utility for academic writing\n');
     console.log('Usage: npx ron [options]');
-    console.log(parser.help());
+    console.log(parser.help({ includeDefault: true }));
   };
 
   let options;
@@ -36,7 +36,7 @@ const main = async () => {
     process.exit(0);
   }
 
-  const start = () => run(sourceDir, options);
+  const start = () => run(options.src, options.out, options);
   await start();
 
   if (options.watch) {
