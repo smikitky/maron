@@ -240,8 +240,7 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
   return { sourceDir, outDir, sourceFile, references, style, figures, options };
 };
 
-const run = async (sourceDir, outDir, options) => {
-  const reporter = createReporter(options.verbose);
+const run = async (sourceDir, outDir, options, reporter) => {
   try {
     await fs.ensureDir(outDir);
     const ctx = await createContext(sourceDir, outDir, options, reporter);
