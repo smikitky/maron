@@ -47,7 +47,7 @@ const main = async () => {
 
   if (options.init) {
     const { src } = options;
-    reporter.section('Initialize a New Ron Project...');
+    reporter.section('Initializing a New Ron Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
       await fs.ensureDir(src);
