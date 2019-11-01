@@ -214,13 +214,16 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
   if (!sourceFile) throw new Error('Source file not found.');
 
   let references = {};
-  let style = '{{authors}} {{title}}';
+  const defaultStyle = '{{authors}} {{title}}';
+  let style = defaultStyle;
   const referencesFileName = path.join(sourceDir, 'references.yaml');
   const referencesFile = await readFileIfExists(referencesFileName);
   if (!referencesFile) {
     reporter.warn('references.yaml not found.');
   } else {
-    ({ references, style } = parseReferences(yaml.load(referencesFile)));
+    ({ references = {}, style = defaultStyle } = parseReferences(
+      yaml.load(referencesFile)
+    ));
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   }
 
