@@ -208,7 +208,7 @@ const convertImages = async (ctx, reporter) => {
  * @param {ReturnType<createReporter>} reporter
  */
 const createContext = async (sourceDir, outDir, options, reporter) => {
-  reporter.section('Loading Source files...');
+  reporter.section('Loading Source Files...');
   const sourceFileName = path.join(sourceDir, 'index.md');
   const sourceFile = await readFileIfExists(sourceFileName);
   if (!sourceFile) throw new Error('Source file not found.');
