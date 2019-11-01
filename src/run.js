@@ -115,6 +115,7 @@ const replaceReferences = (ctx, reporter) => {
 };
 
 const toHtml = async (ctx, reporter) => {
+  const { sourceDir, outDir } = ctx;
   reporter.section('Generating HTML...');
   const html = md.render(ctx.processedMd);
   const template = await fs.readFile(
@@ -125,25 +126,23 @@ const toHtml = async (ctx, reporter) => {
     html,
     useLink: !ctx.options.no_link
   });
-  await fs.writeFile('out/index.html', result, 'utf8');
-  reporter.output('out/index.html');
+  await fs.writeFile(path.join(outDir, 'index.html'), result, 'utf8');
+  reporter.output('index.html');
 
   const defaultCss = await fs.readFile(
     path.join(__dirname, 'style.css'),
     'utf8'
   );
-  const customCss = await readFileIfExists(
-    path.join(ctx.sourceDir, 'style.css')
-  );
+  const customCss = await readFileIfExists(path.join(sourceDir, 'style.css'));
   if (customCss) {
     reporter.log('Loaded custom style.css.');
   } else {
     reporter.info('Custom style.css not found.');
   }
 
-  const cssFile = path.join('out', 'style.css');
+  const cssFile = path.join(outDir, 'style.css');
   await fs.writeFile(cssFile, defaultCss + '\n\n' + customCss);
-  reporter.output(cssFile);
+  reporter.output('style.css');
 };
 
 const parseReferences = data => {
@@ -165,18 +164,16 @@ const parseReferences = data => {
 };
 
 const addReferences = async (ctx, reporter) => {
+  const { outDir } = ctx;
   reporter.section('Processing References...');
   const result = replaceReferences(ctx, reporter);
-
-  await fs.ensureDir('./out');
-  const mdFile = path.join('out', 'index.md');
-  await fs.writeFile(mdFile, result, 'utf8');
-  reporter.output(mdFile);
+  await fs.writeFile(path.join(outDir, 'index.md'), result, 'utf8');
+  reporter.output('index.md');
   ctx.processedMd = result;
 };
 
 const convertImages = async (ctx, reporter) => {
-  const { sourceDir, figures, figTagMap } = ctx;
+  const { sourceDir, outDir, figures, figTagMap } = ctx;
   reporter.section('Converting Images...');
   for (const [tag, index] of figTagMap.entries()) {
     const figure = figures[tag];
@@ -191,12 +188,14 @@ const convertImages = async (ctx, reporter) => {
 
     reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
 
-    const tiffOut = path.join('./out', `fig-${index}.tiff`);
-    await convertImage(inFile, tiffOut, { resolution: figure.resolution });
+    const tiffOut = `fig-${index}.tiff`;
+    await convertImage(inFile, path.join(outDir, tiffOut), {
+      resolution: figure.resolution
+    });
     reporter.output(tiffOut);
 
-    const pngOut = path.join('./out', `fig-${index}.png`);
-    await convertImage(inFile, pngOut, { resolution: 72 });
+    const pngOut = `fig-${index}.png`;
+    await convertImage(inFile, path.join(outDir, pngOut), { resolution: 72 });
     reporter.output(pngOut);
   }
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
@@ -208,7 +207,7 @@ const convertImages = async (ctx, reporter) => {
  * @param {object} options
  * @param {ReturnType<createReporter>} reporter
  */
-const createContext = async (sourceDir, options, reporter) => {
+const createContext = async (sourceDir, outDir, options, reporter) => {
   reporter.section('Loading Source files...');
   const sourceFileName = path.join(sourceDir, 'index.md');
   const sourceFile = await readFileIfExists(sourceFileName);
@@ -235,13 +234,14 @@ const createContext = async (sourceDir, options, reporter) => {
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   }
 
-  return { sourceDir, sourceFile, references, style, figures, options };
+  return { sourceDir, outDir, sourceFile, references, style, figures, options };
 };
 
-const run = async (sourceDir, options) => {
+const run = async (sourceDir, outDir, options) => {
   const reporter = createReporter(options.verbose);
   try {
-    const ctx = await createContext(sourceDir, options, reporter);
+    await fs.ensureDir(outDir);
+    const ctx = await createContext(sourceDir, outDir, options, reporter);
     await addReferences(ctx, reporter);
     await convertImages(ctx, reporter);
     await toHtml(ctx, reporter);
