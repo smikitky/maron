@@ -3,7 +3,7 @@ export default {
     format: '{{authors}} ({{year}}) {{title}}'
   },
   citation: {
-    format: '[{{items}}]',
+    format: '[{{{items}}}]',
     itemSep: ',',
     hyphen: '-'
   }

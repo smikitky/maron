@@ -46,14 +46,12 @@ const replaceReferences = (ctx, reporter) => {
       if (indexes.indexOf(refTagMap.get(tag)) < 0)
         indexes.push(refTagMap.get(tag));
     });
-    return (
-      '[' +
-      formatTag(indexes, styles.citation).replace(
+    return Handlebars.compile(styles.citation.format)({
+      items: formatTag(indexes, styles.citation).replace(
         /(\d+)/g,
         '<span class="ref">$1</span>'
-      ) +
-      ']'
-    );
+      )
+    });
   };
 
   const figReplacer = (_, tag) => {
@@ -216,7 +214,7 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
   const styleFile = await readFileIfExists(styleFileName);
   if (!styleFile) reporter.info('Style file not found. Using default styles.');
   const customStyles = yaml.load(styleFile || '{}');
-  const styles = extend(true, defaultStyle, customStyles);
+  const styles = extend(true, {}, defaultStyle, customStyles);
 
   let references = {};
   const referencesFileName = path.join(sourceDir, 'references.yaml');
