@@ -4,7 +4,7 @@ import _ from 'lodash';
  * Does a conversion like `[1,3,4,6,7,8]` to `'1,3,4,6-8'`.
  * @param {number[]} arr The input array.
  */
-const formatTag = arr => {
+const formatTag = (arr, { itemSep = ',', hyphen = '-' } = {}) => {
   let min = undefined,
     max = undefined,
     result = '';
@@ -20,9 +20,13 @@ const formatTag = arr => {
   arr = _.uniq(arr).sort((a, b) => a - b);
 
   const flush = () => {
-    if (result) result += ',';
+    if (result) result += itemSep;
     result +=
-      max > min + 1 ? min + '-' + max : max === min + 1 ? min + ',' + max : min;
+      max > min + 1
+        ? min + hyphen + max
+        : max === min + 1
+        ? min + itemSep + max
+        : min;
     min = max = undefined;
   };
 

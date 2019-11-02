@@ -1,0 +1,11 @@
+# styles.yaml is used to customize various text styles.
+# 'format' values are processed using Handlebars template engine.
+
+reference:
+  format: >
+    {{authors}} ({{year}}) {{title}}
+citation:
+  format: >
+    [{{items}}]
+  itemSep: ','
+  hyphen: '-'
