@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
+import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
 import url from 'url'; // Node >= 10.12 required
 import fs from 'fs-extra';
@@ -19,7 +20,9 @@ import convertImage from './convertImage';
 import readFileIfExists from './readFileIfExists';
 import defaultStyle from './defaultStyle';
 
-const md = MarkdownIt({ html: true }).use(attrs);
+const md = MarkdownIt({ html: true })
+  .use(attrs)
+  .use(namedHeadings);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const replaceReferences = (ctx, reporter) => {
