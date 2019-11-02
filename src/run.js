@@ -8,6 +8,7 @@ import yaml from 'js-yaml';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
 import escape from 'escape-html';
+import extend from 'extend';
 
 import createReporter from './reporter';
 import formatReference from './formatReference';
@@ -16,12 +17,13 @@ import parseIssue from './parseIssue';
 import parseAuthors from './parseAuthors';
 import convertImage from './convertImage';
 import readFileIfExists from './readFileIfExists';
+import defaultStyle from './defaultStyle';
 
 const md = MarkdownIt({ html: true }).use(attrs);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const replaceReferences = (ctx, reporter) => {
-  const { sourceFile, references, style, figures } = ctx;
+  const { sourceFile, references, styles, figures } = ctx;
   let refCounter = 1;
   const refTagMap = new Map();
   let figCounter = 1;
@@ -43,7 +45,10 @@ const replaceReferences = (ctx, reporter) => {
     });
     return (
       '[' +
-      formatTag(indexes).replace(/(\d+)/g, '<span class="ref">$1</span>') +
+      formatTag(indexes, styles.citation).replace(
+        /(\d+)/g,
+        '<span class="ref">$1</span>'
+      ) +
       ']'
     );
   };
@@ -69,7 +74,7 @@ const replaceReferences = (ctx, reporter) => {
       .map(k => {
         const item = references[k];
         const index = refTagMap.get(k);
-        const formatted = formatReference(item, style).trim();
+        const formatted = formatReference(item, styles.reference.format).trim();
         return `  <li id="ref-${index}" data-doi="${escape(
           item.doi || ''
         )}" value="${index}">${formatted}</li>`;
@@ -145,24 +150,6 @@ const toHtml = async (ctx, reporter) => {
   reporter.output('style.css');
 };
 
-const parseReferences = data => {
-  const parseReference = ref => {
-    return {
-      ...ref,
-      authors:
-        typeof ref.authors === 'string'
-          ? parseAuthors(ref.authors)
-          : ref.authors,
-      issue: typeof ref.issue === 'string' ? parseIssue(ref.issue) : ref.issue
-    };
-  };
-
-  return {
-    ...data,
-    references: _.mapValues(data.references, parseReference)
-  };
-};
-
 const addReferences = async (ctx, reporter) => {
   const { outDir } = ctx;
   reporter.section('Processing References...');
@@ -201,6 +188,15 @@ const convertImages = async (ctx, reporter) => {
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
 };
 
+const parseReference = ref => {
+  return {
+    ...ref,
+    authors:
+      typeof ref.authors === 'string' ? parseAuthors(ref.authors) : ref.authors,
+    issue: typeof ref.issue === 'string' ? parseIssue(ref.issue) : ref.issue
+  };
+};
+
 /**
  * Load source files into memory.
  * @param {string} sourceDir
@@ -213,17 +209,23 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
   const sourceFile = await readFileIfExists(sourceFileName);
   if (!sourceFile) throw new Error('Source file not found.');
 
+  const styleFileName = path.join(sourceDir, 'styles.yaml');
+  const styleFile = await readFileIfExists(styleFileName);
+  if (!styleFile) reporter.info('Style file not found. Using default styles.');
+  const customStyles = yaml.load(styleFile || '{}');
+  const styles = extend(true, defaultStyle, customStyles);
+
   let references = {};
-  const defaultStyle = '{{authors}} {{title}}';
-  let style = defaultStyle;
   const referencesFileName = path.join(sourceDir, 'references.yaml');
   const referencesFile = await readFileIfExists(referencesFileName);
   if (!referencesFile) {
     reporter.warn('references.yaml not found.');
   } else {
-    ({ references = {}, style = defaultStyle } = parseReferences(
-      yaml.load(referencesFile)
-    ));
+    const data = yaml.load(referencesFile);
+    if (typeof data !== 'object') {
+      throw new Error('Root of references.yaml must be an object.');
+    }
+    references = _.mapValues(data, parseReference);
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   }
 
@@ -237,7 +239,15 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   }
 
-  return { sourceDir, outDir, sourceFile, references, style, figures, options };
+  return {
+    sourceDir,
+    outDir,
+    sourceFile,
+    references,
+    styles,
+    figures,
+    options
+  };
 };
 
 const run = async (sourceDir, outDir, options, reporter) => {
