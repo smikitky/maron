@@ -169,7 +169,7 @@ const convertImages = async (ctx, reporter) => {
     const figure = figures[tag];
     const files = await glob(path.resolve(sourceDir, tag + '.{jpg,png,pdf}'));
     if (files.length === 0) {
-      throw new Error(`Figure "${figure.tag}" not found.`);
+      throw new Error(`Figure "${tag}" not found.`);
     }
     if (files.length > 1) {
       throw new Error(`Figure "${figure.tag}" matched two or more file names.`);
