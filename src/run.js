@@ -20,8 +20,8 @@ import defaultStyle from './defaultStyle';
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
-  .use(attrs)
   .use(namedHeadings)
+  .use(attrs)
   .use(backticks.register);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
