@@ -15,10 +15,10 @@ const createReporter = (verbose = false) => {
     if (verbose) log(data);
   };
   const warn = data => {
-    log(chalk.yellow('WARN') + ' ' + data);
+    log(chalk.black.bgYellow('WARN') + ' ' + data);
   };
   const error = data => {
-    log(chalk.red('ERR') + ' ' + data);
+    log(chalk.black.bgRed('ERR') + ' ' + data);
   };
   return { section, log, output, info, warn, error };
 };
