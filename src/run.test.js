@@ -14,7 +14,6 @@ test('Run using init-template', async () => {
     fs.emptyDir(outDir);
     await run(srcDir, outDir, {}, mockReporter);
     expect(mockReporter.error).not.toBeCalled();
-    expect(mockReporter.output).toBeCalledWith('index.md');
     expect(mockReporter.output).toBeCalledWith('index.html');
     expect(mockReporter.output).toBeCalledWith('style.css');
   } finally {
