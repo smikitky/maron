@@ -1,6 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import namedHeadings from 'markdown-it-named-headings';
+import replaceBacktick from './replaceBacktick';
 import path from 'path';
 import url from 'url'; // Node >= 10.12 required
 import fs from 'fs-extra';
@@ -8,122 +9,27 @@ import glob from 'glob-promise';
 import yaml from 'js-yaml';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
-import escape from 'escape-html';
 import extend from 'extend';
 
 import createReporter from './reporter';
-import formatReference from './formatReference';
-import formatTag from './formatTag';
 import parseIssue from './parseIssue';
 import parseAuthors from './parseAuthors';
 import convertImage from './convertImage';
 import readFileIfExists from './readFileIfExists';
 import defaultStyle from './defaultStyle';
 
+const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
   .use(attrs)
-  .use(namedHeadings);
+  .use(namedHeadings)
+  .use(backticks.register);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-const replaceReferences = (ctx, reporter) => {
-  const { sourceFile, references, styles, figures } = ctx;
-  let refCounter = 1;
-  const refTagMap = new Map();
-  let figCounter = 1;
-  const figTagMap = new Map();
-
-  const refReplacer = (_, tags) => {
-    const refs = tags.split(',');
-    const indexes = [];
-    refs.forEach(tag => {
-      const reference = references[tag];
-      if (!reference) throw new Error('Unknown reference tag: ' + tag);
-      if (!refTagMap.has(tag)) {
-        const refIndex = refCounter++;
-        refTagMap.set(tag, refIndex);
-        reporter.info(`ref #${refIndex} = ${tag}`);
-      }
-      if (indexes.indexOf(refTagMap.get(tag)) < 0)
-        indexes.push(refTagMap.get(tag));
-    });
-    return Handlebars.compile(styles.citation.format)({
-      items: formatTag(indexes, styles.citation).replace(
-        /(\d+)/g,
-        '<span class="ref">$1</span>'
-      )
-    });
-  };
-
-  const figReplacer = (_, tag) => {
-    const figure = figures[tag];
-    if (!figure) throw new Error('Unknown figure tag: ' + tag);
-    const index = figTagMap.has(tag)
-      ? figTagMap.get(tag)
-      : (() => {
-          const index = figCounter++;
-          figTagMap.set(tag, index);
-          reporter.info(`figure #${index} = ${tag}`);
-          return index;
-        })();
-    return `<span class="fig">${index}</span>`;
-  };
-
-  const referencesList = () => {
-    const items = Object.keys(references)
-      .filter(r => refTagMap.has(r))
-      .sort((a, b) => refTagMap.get(a) - refTagMap.get(b))
-      .map(k => {
-        const item = references[k];
-        const index = refTagMap.get(k);
-        const formatted = formatReference(item, styles.reference.format).trim();
-        return `  <li id="ref-${index}" data-doi="${escape(
-          item.doi || ''
-        )}" value="${index}">${formatted}</li>`;
-      })
-      .join('\n');
-    return `<ol class="references">\n${items}\n</ol>`;
-  };
-
-  const figuresList = () => {
-    const items = Object.keys(figures)
-      .filter(f => figTagMap.has(f))
-      .sort((a, b) => figTagMap.get(a) - figTagMap.get(b))
-      .map(tag => {
-        const index = figTagMap.get(tag);
-        const figure = figures[tag];
-        return (
-          `<figure id="fig-${index}">\n` +
-          `  <img src="fig-${index}.png" />\n` +
-          `  <figcaption><b>Figure ${index}</b> ${figure.caption}</figcaption>\n` +
-          `</figure>`
-        );
-      });
-    return items.join('\n');
-  };
-
-  const result = sourceFile
-    .replace(/`ref:(.+?)`/g, refReplacer)
-    .replace(/`fig:(.+?)`/g, figReplacer)
-    .replace(/`references`/g, referencesList)
-    .replace(/`figures`/g, figuresList);
-
-  const unusedRefs = Object.keys(references).filter(r => !refTagMap.has(r));
-  if (unusedRefs.length) {
-    reporter.warn('Unused references: ' + unusedRefs.join(', '));
-  }
-  const unusedFigs = Object.keys(figures).filter(f => !figTagMap.has(f));
-  if (unusedFigs.length) {
-    reporter.warn('Unused figures: ' + unusedFigs.join(', '));
-  }
-
-  ctx.figTagMap = figTagMap;
-  return result;
-};
-
-const toHtml = async (ctx, reporter) => {
-  const { sourceDir, outDir } = ctx;
+const generateHtml = async (ctx, reporter) => {
+  const { sourceFile, outDir, references, refTagMap, figures, figTagMap } = ctx;
   reporter.section('Generating HTML...');
-  const html = md.render(ctx.processedMd);
+  backticks.reset(ctx, reporter);
+  const html = md.render(sourceFile);
   const template = await fs.readFile(
     path.join(__dirname, 'template.html'),
     'utf8'
@@ -133,12 +39,28 @@ const toHtml = async (ctx, reporter) => {
     useLink: !ctx.options.no_link
   });
   await fs.writeFile(path.join(outDir, 'index.html'), result, 'utf8');
+
+  const warnUnused = (name, obj, map) => {
+    const unused = Object.keys(obj).filter(t => !map.has(t));
+    if (unused.length) {
+      reporter.warn(`Unused ${name}: ` + unused.join(', '));
+    }
+  };
+  warnUnused('references', references, refTagMap);
+  warnUnused('figures', figures, figTagMap);
+
   reporter.output('index.html');
+};
+
+const generateCss = async (ctx, reporter) => {
+  const { sourceDir, outDir } = ctx;
+  reporter.section('Generating CSS...');
 
   const defaultCss = await fs.readFile(
     path.join(__dirname, 'style.css'),
     'utf8'
   );
+
   const customCss = await readFileIfExists(path.join(sourceDir, 'style.css'));
   if (customCss) {
     reporter.log('Loaded custom style.css.');
@@ -149,15 +71,6 @@ const toHtml = async (ctx, reporter) => {
   const cssFile = path.join(outDir, 'style.css');
   await fs.writeFile(cssFile, defaultCss + '\n\n' + customCss);
   reporter.output('style.css');
-};
-
-const addReferences = async (ctx, reporter) => {
-  const { outDir } = ctx;
-  reporter.section('Processing References...');
-  const result = replaceReferences(ctx, reporter);
-  await fs.writeFile(path.join(outDir, 'index.md'), result, 'utf8');
-  reporter.output('index.md');
-  ctx.processedMd = result;
 };
 
 const convertImages = async (ctx, reporter) => {
@@ -245,8 +158,10 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
     outDir,
     sourceFile,
     references,
-    styles,
+    refTagMap: new Map(),
     figures,
+    figTagMap: new Map(),
+    styles,
     options
   };
 };
@@ -255,9 +170,9 @@ const run = async (sourceDir, outDir, options, reporter) => {
   try {
     await fs.ensureDir(outDir);
     const ctx = await createContext(sourceDir, outDir, options, reporter);
-    await addReferences(ctx, reporter);
+    await generateHtml(ctx, reporter);
     await convertImages(ctx, reporter);
-    await toHtml(ctx, reporter);
+    await generateCss(ctx, reporter);
   } catch (err) {
     reporter.error(err.message);
   }
