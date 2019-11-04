@@ -52,6 +52,11 @@ This is the main manuscript written in the Markdown format. In addition to all t
 
 - Arbitrary HTML tags
 - Custom class/id using [markdown-it-attrs](https://www.npmjs.com/package/markdown-it-attrs)
+- Custom backtick tags
+  - Article citation: `` `ref:<tag>` `` (e.g., `` `ref:yamada2010` ``)
+  - References list: `` `references` ``
+  - Figure reference `` `fig:<tag>` `` (e.g., `` `fig:mydog` ``)
+  - Figures list: `` `figures` ``
 
 ### References (`references.yaml`)
 
@@ -67,7 +72,7 @@ yamada2010:
 
 Here `yamda2010` is the "tag" of this entry. In the main manuscript file, this entry is referred to like `` `ref:yamada2010` ``.
 
-Near the end of your manuscript, you can output the references list by writing `` `refernces` ``.
+Near the end of your manuscript, you can output the references list by writing `` `references` ``.
 
 ### Figures (`figures.yaml`)
 
@@ -95,7 +100,7 @@ reference:
     {{authorList authors max=3}}. <b>{{capitalize title}}</b>. {{journal}} {{issue.year}};{{issue.volume}}({{issue.issue}}): {{{pages issue.pages compact=true delim='&ndash;'}}}.
 citation:
   format: >
-    [{{items}}]
+    [{{{items}}}]
   itemSep: ','
   hyphen: '-'
 ```
@@ -103,7 +108,7 @@ citation:
 Values named `format` are processed using the Handlebar template engine.
 
 - `reference.format`: Defines the references format.
-- `citation.format`: Defines the citation format. For example, you can set this to `<sup>{{items}}</sup>` instead of the default.
+- `citation.format`: Defines the citation format. For example, you can set this to `<sup>{{{items}}}</sup>` instead of the default.
 - `citation.itemSep` (default: `','`): Defines the comma between cite index. ([])
 - `citation.hyphen` (default: `'-'`)
 
