@@ -6,6 +6,8 @@ import fs from 'fs-extra';
 import run from './run';
 import url from 'url'; // Node >= 10.12 required
 import createReporter from './reporter';
+import serve from './serve';
+import { EventEmitter } from 'events';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -19,6 +21,7 @@ const main = async () => {
       { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
       { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' },
       { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' },
+      { names: ['serve', 's'], type: 'bool', help: 'Make instant HTTP server' },
       { names: ['help', 'h'], type: 'bool', help: 'Prints this message' }
     ]
   });
@@ -66,7 +69,12 @@ const main = async () => {
   const start = () => run(options.src, options.out, options, reporter);
   await start();
 
-  if (options.watch) {
+  let notify = new EventEmitter();
+  if (options.serve) {
+    serve(options.out, notify);
+  }
+
+  if (options.watch || options.serve) {
     let recompiling = false;
     console.log('Watching source and reference files...');
     const handler = _.debounce(() => {
@@ -74,7 +82,10 @@ const main = async () => {
       recompiling = true;
       if (options.clear) console.clear();
       console.log('Recompiling...');
-      start().then(() => (recompiling = false));
+      start().then(() => {
+        recompiling = false;
+        notify.emit('change');
+      });
     }, 300);
     chokidar.watch('./src').on('change', handler);
   }

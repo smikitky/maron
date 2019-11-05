@@ -36,5 +36,13 @@
     elem.title = ref.textContent;
   });
 </script>
+{{#if serve}}
+<script>
+  if (location.href.match(/^http/)) {
+    const eventSource = new EventSource('/updates');
+    eventSource.addEventListener('change', () =>  location.reload());
+  }
+</script>
+{{/if}}
 </body>
 </html>

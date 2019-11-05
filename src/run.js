@@ -36,7 +36,8 @@ const generateHtml = async (ctx, reporter) => {
   );
   const result = Handlebars.compile(template)({
     html,
-    useLink: !ctx.options.no_link
+    useLink: !ctx.options.no_link,
+    serve: !!ctx.options.serve
   });
   await fs.writeFile(path.join(outDir, 'index.html'), result, 'utf8');
 
