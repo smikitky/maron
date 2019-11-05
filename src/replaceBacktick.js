@@ -17,7 +17,7 @@ const replaceBacktick = () => {
     const match = state.src.slice(state.pos).match(regex);
     if (!match) return false;
 
-    const [matched, content, type1, tag, type2] = match;
+    const [matched, , type1, tag, type2] = match;
     const type = type1 || type2;
     state.pos += matched.length;
 
@@ -102,20 +102,12 @@ const replaceBacktick = () => {
       addRawHtmlToken(items.join('\n'));
     };
 
-    switch (type) {
-      case 'ref':
-        replaceRef();
-        break;
-      case 'fig':
-        replaceFig();
-        break;
-      case 'references':
-        replaceReferences();
-        break;
-      case 'figures':
-        replaceFigures();
-        break;
-    }
+    ({
+      ref: replaceRef,
+      fig: replaceFig,
+      references: replaceReferences,
+      figures: replaceFigures
+    }[type]());
     return true;
   };
 
