@@ -16,4 +16,11 @@ test('parse', () => {
     issue: 4,
     pages: [1024, 1024]
   });
+  expect(parseIssue('1998; 7(5): g30572')).toStrictEqual({
+    year: 1998,
+    month: undefined,
+    volume: 7,
+    issue: 5,
+    pages: 'g30572'
+  });
 });
