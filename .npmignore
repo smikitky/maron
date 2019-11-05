@@ -3,5 +3,6 @@
 coverage
 *.test.js
 test-out
+.github
 
 .vscode
