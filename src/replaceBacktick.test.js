@@ -51,11 +51,11 @@ describe('replaceBacktick', () => {
   });
 
   test('references', () => {
-    const $ = cheerio.load(md.render('`ref:shimamura` `references`'));
+    const $ = cheerio.load(md.render('`ref:honda,shimamura` `references`'));
     expect($('ol.references')).toHaveLength(1);
-    const tag = $('li#ref-1');
-    expect(tag).toHaveLength(1);
-    expect(tag.text()).toContain('smiling');
+    expect($('li[id^="ref"]')).toHaveLength(2);
+    expect($('li:nth-child(1)').text()).toContain('stars');
+    expect($('li:nth-child(2)').text()).toContain('smiling');
   });
 
   test('figures', () => {
