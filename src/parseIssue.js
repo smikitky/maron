@@ -4,11 +4,10 @@ const parseIssue = str => {
   const match = str
     .trim()
     .match(
-      /^(?<year>\d+)(\s+(?<month>[A-Za-z]+))?;\s*(?<volume>\d+)\((?<issue>\d+)\)((\:\s*|\s+)(?<pages>.+))?$/
+      /^(?<year>\d+)(\s+(?<month>[A-Za-z]+))?;\s*(?<volume>\d+)\((?<issue>(\d|\-)+)\)((\:\s*|\s+)(?<pages>.+))?$/
     );
   if (!match) throw new Error('Invalid issue format: ' + str);
-  let { year, volume, issue } = _.mapValues(match.groups, v => Number(v));
-  let { month, pages } = match.groups;
+  let { year, month, volume, issue, pages } = match.groups;
 
   const pageMatch = pages.match(/^(\d+)(-(\d+))?$/);
   if (pageMatch) {
