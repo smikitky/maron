@@ -23,7 +23,7 @@ const exec = async (command, args) => {
 const convertImage = async (inFile, outFile, options = {}) => {
   const { resolution = 600 } = options;
 
-  const magick6 = process.env.IMAGEMAGICK_VERSION === 6;
+  const magick6 = process.env.IMAGEMAGICK_VERSION === '6';
   const command = magick6 ? 'convert' : 'magick';
   const subCommand = magick6 ? [] : ['convert'];
 
