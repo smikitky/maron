@@ -2,6 +2,10 @@
 
 Ron is a helper script for writing manuscripts in markdown.
 
+- Converts a markdown manuscript file into HTML.
+- Manages reference list and citation numbers (`[2-3,7]`) in your manuscript.
+- Converts PNG/PDF files into TIFF using ImageMagick.
+
 ## Usage
 
 1. Install Node.js.
