@@ -75,15 +75,15 @@ const main = async () => {
   }
 
   if (options.watch || options.serve) {
-    let recompiling = false;
+    let busy = false;
     console.log('Watching source and reference files...');
     const handler = _.debounce(() => {
-      if (recompiling) return;
-      recompiling = true;
+      if (busy) return;
+      busy = true;
       if (options.clear) console.clear();
       console.log('Recompiling...');
       start().then(() => {
-        recompiling = false;
+        busy = false;
         notify.emit('change');
       });
     }, 300);
