@@ -94,6 +94,17 @@ Source image files can be PDF (`*.pdf`), PNG (`*.png`) or JPEG (`*.jpg`). They m
 
 Specify `resolution` to determine the resolution to your PDF.
 
+### Tables (`tables.yml`)
+
+Tables can be authored using HTML (`*.html`, more flexible) or Markdown (`*.md`, suitable for simple tables). Each table should be stored in a separate file and it must be referenced from `tables.yaml`.
+
+```yaml
+my-table:
+  caption: foo
+```
+
+An HTML file should contain only the `<table>` tag and its contents.
+
 ### Styles (`styles.yaml`)
 
 Use this file to customize output format.

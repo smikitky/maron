@@ -9,7 +9,7 @@
 
 {{#if useLink}}
 <script>
-  document.querySelectorAll('.ref,.fig').forEach(elem => {
+  document.querySelectorAll('.ref,.fig,.tab').forEach(elem => {
     const link = document.createElement('a');
     link.innerHTML = elem.outerHTML;
     const type = elem.className;

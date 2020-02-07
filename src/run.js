@@ -74,19 +74,29 @@ const generateCss = async (ctx, reporter) => {
   reporter.output('style.css');
 };
 
+const findFileMatchingTag = async (sourceDir, name, tag, extentions) => {
+  const files = await glob(
+    path.resolve(sourceDir, tag + '.{' + extentions.join(',') + '}')
+  );
+  if (files.length === 0) {
+    throw new Error(`Figure "${tag}" not found.`);
+  }
+  if (files.length > 1) {
+    throw new Error(`${name} "${figure.tag}" matched two or more file names.`);
+  }
+  return files[0];
+};
+
 const convertImages = async (ctx, reporter) => {
   const { sourceDir, outDir, figures, figTagMap } = ctx;
   reporter.section('Converting Images...');
   for (const [tag, index] of figTagMap.entries()) {
     const figure = figures[tag];
-    const files = await glob(path.resolve(sourceDir, tag + '.{jpg,png,pdf}'));
-    if (files.length === 0) {
-      throw new Error(`Figure "${tag}" not found.`);
-    }
-    if (files.length > 1) {
-      throw new Error(`Figure "${figure.tag}" matched two or more file names.`);
-    }
-    const inFile = files[0];
+    const inFile = await findFileMatchingTag(sourceDir, 'Figure', tag, [
+      'jpg',
+      'png',
+      'pdf'
+    ]);
 
     reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
 
@@ -154,6 +164,25 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   }
 
+  let tables = [];
+  const tablesFileName = path.join(sourceDir, 'tables.yaml');
+  const tablesFile = await readFileIfExists(tablesFileName);
+  if (!tablesFile) {
+    reporter.warn('tables.yaml not found.');
+  } else {
+    tables = yaml.load(tablesFile);
+    for (const [tag, item] of Object.entries(tables)) {
+      const file = await findFileMatchingTag(sourceDir, 'Table', tag, [
+        'md',
+        'html'
+      ]);
+      const isMd = /\.md$/.test(file);
+      const fileContent = await fs.readFile(file, 'utf8');
+      item.content = isMd ? md.render(fileContent) : fileContent;
+    }
+    reporter.log(`Loaded ${Object.keys(tables).length} table items.`);
+  }
+
   return {
     sourceDir,
     outDir,
@@ -162,6 +191,8 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
     refTagMap: new Map(),
     figures,
     figTagMap: new Map(),
+    tables,
+    tabTagMap: new Map(),
     styles,
     options
   };

@@ -8,12 +8,12 @@ import formatTag from './formatTag';
  * `register` is passed to `MarkdownIt.use()`.
  */
 const replaceBacktick = () => {
-  let ctx, reporter, refCounter, figCounter;
+  let ctx, reporter, refCounter, figCounter, tabCounter;
 
   const replace = (state, silent) => {
     if (state.src[state.pos] !== '`') return false;
 
-    const regex = /^`((ref|fig):([^`]+)|(references|figures))`/;
+    const regex = /^`((ref|fig|tab):([^`]+)|(references|figures|tables))`/;
     const match = state.src.slice(state.pos).match(regex);
     if (!match) return false;
 
@@ -27,7 +27,15 @@ const replaceBacktick = () => {
       token.content = html;
     };
 
-    const { references, refTagMap, figures, figTagMap, styles } = ctx;
+    const {
+      references,
+      refTagMap,
+      figures,
+      figTagMap,
+      tables,
+      tabTagMap,
+      styles
+    } = ctx;
 
     const replaceRef = () => {
       const refs = tag.split(',');
@@ -52,18 +60,26 @@ const replaceBacktick = () => {
       addRawHtmlToken(html);
     };
 
-    const replaceFig = () => {
-      const figure = figures[tag];
-      if (!figure) throw new Error('Unknown figure tag: ' + tag);
-      const index = figTagMap.has(tag)
-        ? figTagMap.get(tag)
+    const replaceFigOrTab = (list, map, name, className) => {
+      const item = list[tag];
+      if (!item) throw new Error(`Unknown ${name} tag: ` + tag);
+      const index = map.has(tag)
+        ? map.get(tag)
         : (() => {
-            const index = figCounter++;
-            figTagMap.set(tag, index);
-            reporter.info(`figure #${index} = ${tag}`);
+            const index = name === 'figure' ? figCounter++ : tabCounter++;
+            map.set(tag, index);
+            reporter.info(`${name} #${index} = ${tag}`);
             return index;
           })();
-      addRawHtmlToken(`<span class="fig">${index}</span>`);
+      addRawHtmlToken(`<span class="${className}">${index}</span>`);
+    };
+
+    const replaceFig = () => {
+      replaceFigOrTab(figures, figTagMap, 'figure', 'fig');
+    };
+
+    const replaceTab = () => {
+      replaceFigOrTab(tables, tabTagMap, 'table', 'tab');
     };
 
     const replaceReferences = () => {
@@ -102,11 +118,30 @@ const replaceBacktick = () => {
       addRawHtmlToken(items.join('\n'));
     };
 
+    const replaceTables = () => {
+      const items = Object.keys(tables)
+        .filter(f => tabTagMap.has(f))
+        .sort((a, b) => tabTagMap.get(a) - tabTagMap.get(b))
+        .map(tag => {
+          const index = tabTagMap.get(tag);
+          const table = tables[tag];
+          return (
+            `<figure id="tab-${index}">\n` +
+            `  ${table.content}\n` +
+            `  <figcaption><b>Table ${index}</b> ${table.caption}</figcaption>\n` +
+            `</figure>`
+          );
+        });
+      addRawHtmlToken(items.join('\n'));
+    };
+
     ({
       ref: replaceRef,
       fig: replaceFig,
+      tab: replaceTab,
       references: replaceReferences,
-      figures: replaceFigures
+      figures: replaceFigures,
+      tables: replaceTables
     }[type]());
     return true;
   };
@@ -121,6 +156,7 @@ const replaceBacktick = () => {
     reporter = theReporter;
     refCounter = 1;
     figCounter = 1;
+    tabCounter = 1;
   };
 
   return { reset, register };
