@@ -3,15 +3,26 @@ body {
   font-size: 11pt;
 }
 
-h2:nth-of-type(1),
-h2:nth-of-type(3) {
-  page-break-before: always;
-}
-
 h1,
 h2,
 h3 {
   page-break-after: avoid;
+}
+
+h1 {
+  font-size: 170%;
+}
+
+h2 {
+  font-size: 140%;
+}
+
+h3 {
+  font-size: 120%;
+}
+
+h4 {
+  font-size: 100%;
 }
 
 img {
@@ -34,6 +45,19 @@ table th {
 table td {
   border-top: 1px solid silver;
   padding: 0 1em;
+}
+
+figure {
+  margin: 1em 0;
+  page-break-before: always;
+}
+
+figure:nth-child(1) {
+  page-break-before: auto;
+}
+
+figcaption {
+  margin: 1em 0;
 }
 
 .authors {

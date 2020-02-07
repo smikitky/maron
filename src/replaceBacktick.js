@@ -115,7 +115,9 @@ const replaceBacktick = () => {
             `</figure>`
           );
         });
-      addRawHtmlToken(items.join('\n'));
+      addRawHtmlToken(
+        '<div class="list-figures">' + items.join('\n') + '</div>'
+      );
     };
 
     const replaceTables = () => {
@@ -132,7 +134,7 @@ const replaceBacktick = () => {
             `</figure>`
           );
         });
-      addRawHtmlToken(items.join('\n'));
+      addRawHtmlToken('<div id="list-tables">' + items.join('\n') + '</div>');
     };
 
     ({
