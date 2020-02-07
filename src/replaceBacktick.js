@@ -1,6 +1,7 @@
 import Handlebars from 'handlebars';
 import formatReference from './formatReference';
 import formatTag from './formatTag';
+import cheerio from 'cheerio';
 
 /**
  * Provides a custom markdown-it plug-in
@@ -71,7 +72,11 @@ const replaceBacktick = () => {
             reporter.info(`${name} #${index} = ${tag}`);
             return index;
           })();
-      addRawHtmlToken(`<span class="${className}">${index}</span>`);
+      const $ = cheerio.load('');
+      const span = $('<span>')
+        .addClass(className)
+        .text(index);
+      addRawHtmlToken(span.toString());
     };
 
     const replaceFig = () => {
@@ -83,58 +88,79 @@ const replaceBacktick = () => {
     };
 
     const replaceReferences = () => {
-      const items = Object.keys(references)
+      const $ = cheerio.load('');
+      const ol = $('<ol>').addClass('references');
+      Object.keys(references)
         .filter(r => refTagMap.has(r))
         .sort((a, b) => refTagMap.get(a) - refTagMap.get(b))
-        .map(k => {
+        .forEach(k => {
           const item = references[k];
           const index = refTagMap.get(k);
           const formatted = formatReference(
             item,
             styles.reference.format
           ).trim();
-          return `  <li id="ref-${index}" data-doi="${escape(
-            item.doi || ''
-          )}" value="${index}">${formatted}</li>`;
-        })
-        .join('\n');
-      addRawHtmlToken(`<ol class="references">\n${items}\n</ol>`);
+          $('<li>')
+            .attr('id', `ref-${index}`)
+            .data('doi', item.doi || '')
+            .attr('value', index + '')
+            .html(formatted)
+            .appendTo(ol);
+        });
+      addRawHtmlToken(ol.toString());
+    };
+
+    const replaceFiguresOrTables = (
+      list,
+      map,
+      name,
+      className,
+      tagToContent,
+      style
+    ) => {
+      const $ = cheerio.load('');
+      const div = $('<div>').addClass(`list-${name}`);
+      Object.keys(list)
+        .filter(f => map.has(f))
+        .sort((a, b) => map.get(a) - map.get(b))
+        .forEach(tag => {
+          const index = map.get(tag);
+          const item = list[tag];
+          const content = tagToContent($, tag, index);
+          const figure = $('<figure>').attr('id', `${className}-${index}`);
+          const figcaption = $('<figcaption>').html(
+            Handlebars.compile(style.format)({ index, caption: item.caption })
+          );
+          if (style.position === 'top') {
+            figure.append(figcaption, content);
+          } else {
+            figure.append(content, figcaption);
+          }
+          div.append(figure);
+        });
+      addRawHtmlToken(div.toString());
     };
 
     const replaceFigures = () => {
-      const items = Object.keys(figures)
-        .filter(f => figTagMap.has(f))
-        .sort((a, b) => figTagMap.get(a) - figTagMap.get(b))
-        .map(tag => {
-          const index = figTagMap.get(tag);
-          const figure = figures[tag];
-          return (
-            `<figure id="fig-${index}">\n` +
-            `  <img src="fig-${index}.png" />\n` +
-            `  <figcaption><b>Figure ${index}</b> ${figure.caption}</figcaption>\n` +
-            `</figure>`
-          );
-        });
-      addRawHtmlToken(
-        '<div class="list-figures">' + items.join('\n') + '</div>'
+      replaceFiguresOrTables(
+        figures,
+        figTagMap,
+        'figure',
+        'fig',
+        ($, tag, index) => $('<img>').attr('src', `fig-${index}.png`),
+        styles.figCaption
       );
     };
 
     const replaceTables = () => {
-      const items = Object.keys(tables)
-        .filter(f => tabTagMap.has(f))
-        .sort((a, b) => tabTagMap.get(a) - tabTagMap.get(b))
-        .map(tag => {
-          const index = tabTagMap.get(tag);
-          const table = tables[tag];
-          return (
-            `<figure id="tab-${index}">\n` +
-            `  ${table.content}\n` +
-            `  <figcaption><b>Table ${index}</b> ${table.caption}</figcaption>\n` +
-            `</figure>`
-          );
-        });
-      addRawHtmlToken('<div id="list-tables">' + items.join('\n') + '</div>');
+      replaceFiguresOrTables(
+        tables,
+        tabTagMap,
+        'table',
+        'tab',
+        ($, tag, index) => tables[tag].content,
+        styles.tabCaption
+      );
     };
 
     ({

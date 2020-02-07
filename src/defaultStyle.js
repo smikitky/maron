@@ -6,5 +6,13 @@ export default {
     format: '[{{{items}}}]',
     itemSep: ',',
     hyphen: '-'
+  },
+  figCaption: {
+    position: 'bottom',
+    format: '<b>Figure {{index}}</b>: {{{caption}}}'
+  },
+  tabCaption: {
+    position: 'top',
+    format: '<b>Table {{index}}</b>: {{{caption}}}'
   }
 };
