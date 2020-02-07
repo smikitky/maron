@@ -88,8 +88,12 @@ const findFileMatchingTag = async (sourceDir, name, tag, extentions) => {
 };
 
 const convertImages = async (ctx, reporter) => {
-  const { sourceDir, outDir, figures, figTagMap } = ctx;
+  const { sourceDir, outDir, figures, figTagMap, options } = ctx;
   reporter.section('Converting Images...');
+  if (options.text_only) {
+    reporter.log('Skip');
+    return;
+  }
   for (const [tag, index] of figTagMap.entries()) {
     const figure = figures[tag];
     const inFile = await findFileMatchingTag(sourceDir, 'Figure', tag, [

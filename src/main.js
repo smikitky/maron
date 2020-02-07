@@ -20,6 +20,7 @@ const main = async () => {
       { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' },
       { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
       { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' },
+      { names: ['text-only', 't'], type: 'bool', help: 'No image convertion' },
       { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' },
       { names: ['serve', 's'], type: 'bool', help: 'Make instant HTTP server' },
       { names: ['help', 'h'], type: 'bool', help: 'Prints this message' }
