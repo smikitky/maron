@@ -106,14 +106,20 @@ const convertImages = async (ctx, reporter) => {
 
     reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
 
-    const tiffOut = `fig-${index}.tiff`;
-    await convertImage(inFile, path.join(outDir, tiffOut), {
-      resolution: figure.resolution
+    const tiffOut = path.join(outDir, `fig-${index}.tiff`);
+    const tiffOutBuf = await convertImage(fs.createReadStream(inFile), {
+      resolution: figure.resolution,
+      outType: 'tiff'
     });
+    await fs.writeFile(tiffOut, tiffOutBuf);
     reporter.output(tiffOut);
 
-    const pngOut = `fig-${index}.png`;
-    await convertImage(inFile, path.join(outDir, pngOut), { resolution: 72 });
+    const pngOut = path.join(outDir, `fig-${index}.png`);
+    const pngOutBuf = await convertImage(fs.createReadStream(inFile), {
+      resolution: 72,
+      outType: 'png'
+    });
+    await fs.writeFile(pngOut, pngOutBuf);
     reporter.output(pngOut);
   }
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
