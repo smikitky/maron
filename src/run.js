@@ -116,7 +116,7 @@ const convertImages = async (ctx, reporter) => {
 
     const pngOut = path.join(outDir, `fig-${index}.png`);
     const pngOutBuf = await convertImage(fs.createReadStream(inFile), {
-      resolution: 72,
+      resolution: figure.webResolution || figure.resolution || 72,
       outType: 'png'
     });
     await fs.writeFile(pngOut, pngOutBuf);

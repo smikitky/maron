@@ -23,7 +23,7 @@ const exec = async (command, args, stdin) => {
  * Converts a PDF file to TIFF/PNG using ImageMagick.
  * ImageMagick and Ghostscript must be installed on the system.
  * @param {Readable} inputStream Content of the input file.
- * @param {{ resolution: number, outType: string }} options
+ * @param {object} options
  */
 const convertImage = async (inputStream, options = {}) => {
   const { resolution = 600, outType = 'png' } = options;
@@ -36,9 +36,7 @@ const convertImage = async (inputStream, options = {}) => {
   })();
 
   // PDF files will be rasterized using this resolution
-  const rasterResolutionOption = /\.pdf$/i.test('abc')
-    ? ['-density', resolution]
-    : [];
+  const rasterResolutionOption = resolution ? ['-density', resolution] : [];
 
   // prettier-ignore
   const args = [
@@ -46,7 +44,7 @@ const convertImage = async (inputStream, options = {}) => {
     ...rasterResolutionOption,
     '-', // Read from stdin
     '-units', 'PixelsPerInch', // Specifying this is important
-    '-density', resolution, // Set output resolution of rasterized image
+    // '-density', resolution, // Set output resolution of rasterized image
     `${outType}:-` // Output to stdout
   ];
 
