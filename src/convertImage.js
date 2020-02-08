@@ -6,11 +6,14 @@ const exec = async (command, args, stdin) => {
   return new Promise((resolve, reject) => {
     const process = cp.spawn(command, args);
     stdin.pipe(process.stdin);
-    let result;
-    const cat = concat(buffer => (result = buffer));
-    process.stdout.pipe(cat);
+    let stdout, stderr;
+    const catout = concat(buffer => (stdout = buffer));
+    const caterr = concat(buffer => (stderr = buffer));
+    process.stdout.pipe(catout);
+    process.stderr.pipe(caterr);
     process.on('close', code => {
-      if (code === 0) resolve(result);
+      // if (stderr) console.error(stderr);
+      if (code === 0) resolve(stdout);
       else reject(new Error('Exited with non-zero status code'));
     });
   });
@@ -25,9 +28,12 @@ const exec = async (command, args, stdin) => {
 const convertImage = async (inputStream, options = {}) => {
   const { resolution = 600, outType = 'png' } = options;
 
-  const magick6 = process.env.IMAGEMAGICK_VERSION === '6';
-  const command = magick6 ? 'convert' : 'magick';
-  const subCommand = magick6 ? [] : ['convert'];
+  const [command, subCommand] = (() => {
+    const magick = process.env.RON_MAGICK;
+    if (magick === '6') return ['convert', []];
+    if (!magick || magick === '7') return ['magick', ['convert']];
+    return ['docker', ['run', '-i', '--rm', magick]];
+  })();
 
   // PDF files will be rasterized using this resolution
   const rasterResolutionOption = /\.pdf$/i.test('abc')
