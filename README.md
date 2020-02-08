@@ -132,6 +132,10 @@ Values named `format` are processed using the Handlebar template engine.
 - `citation.format`: Defines the citation format. For example, you can set this to `<sup>{{{items}}}</sup>` instead of the default.
 - `citation.itemSep` (default: `','`): Defines the comma between cite index. ([])
 - `citation.hyphen` (default: `'-'`)
+- `figCaption.position` (default: `bottom`): Defines the position of the caption. One of `top`, `bottom` or `none`.
+- `figCaption.format`: Defines the format of figure captions.
+- `tabCaption.position` (default: `top`)
+- `tabCaption.format`: Defines the format of table captions.
 
 ### Custom HTML (`style.css`)
 

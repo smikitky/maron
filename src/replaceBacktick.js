@@ -131,10 +131,11 @@ const replaceBacktick = () => {
           const figcaption = $('<figcaption>').html(
             Handlebars.compile(style.format)({ index, caption: item.caption })
           );
+          figure.append(content);
           if (style.position === 'top') {
-            figure.append(figcaption, content);
-          } else {
-            figure.append(content, figcaption);
+            figure.prepend(figcaption);
+          } else if (style.position === 'bottom') {
+            figure.append(figcaption);
           }
           div.append(figure);
         });
