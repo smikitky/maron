@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
+import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
 import replaceBacktick from './replaceBacktick';
 import path from 'path';
@@ -22,6 +23,7 @@ const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
   .use(namedHeadings)
   .use(attrs)
+  .use(mdInclude)
   .use(backticks.register);
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
