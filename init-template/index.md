@@ -5,11 +5,11 @@ John Doe, Jane, Doe, An Onymous
 
 # Introduction
 
-This is the first sentence`ref:quantum`.
+This is the first sentence `ref:quantum`.
 
 Fig. `fig:rabbit` shows a rabbit.
 
-See Table `tab:dillema` for an example table.
+See Table `tab:dilemma` for an example table.
 
 # Materials and Methods
 
@@ -20,6 +20,10 @@ See Table `tab:dillema` for an example table.
 # References
 
 `references`
+
+# Tables
+
+`tables`
 
 # Figures
 

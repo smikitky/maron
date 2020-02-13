@@ -3,9 +3,9 @@
 
 reference:
   format: >
-    {{authors}} ({{year}}) {{title}}
+    {{authors}} ({{issue.year}}) {{title}}
 citation:
   format: >
-    [{{items}}]
+    [{{{items}}}]
   itemSep: ','
   hyphen: '-'
