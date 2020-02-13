@@ -7,35 +7,6 @@
 {{{html}}}
 </article>
 
-{{#if useLink}}
-<script>
-  document.querySelectorAll('.ref,.fig,.tab').forEach(elem => {
-    const link = document.createElement('a');
-    link.innerHTML = elem.outerHTML;
-    const type = elem.className;
-    link.href = `#${type}-${elem.innerHTML}`;
-    elem.parentNode.insertBefore(link, elem);
-    elem.remove();
-  });
-  document.querySelectorAll('ol.references > li[data-doi]').forEach(li => {
-    const doi = li.dataset.doi;
-    if (!doi) return;
-    const link = document.createElement('a');
-    link.className = 'doi-link';
-    link.target = '_blank';
-    link.href = `http://doi.org/${doi}`;
-    link.textContent = 'DOI';
-    li.append(link);
-  });
-</script>
-{{/if}}
-<script>
-  document.querySelectorAll('.ref').forEach(elem => {
-    const index = elem.textContent;
-    const ref = document.querySelector(`#ref-${index}`);
-    elem.title = ref.textContent;
-  });
-</script>
 {{#if serve}}
 <script>
   if (location.href.match(/^http/)) {

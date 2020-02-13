@@ -11,6 +11,7 @@ import yaml from 'js-yaml';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
 import extend from 'extend';
+import cheerio from 'cheerio';
 
 import createReporter from './reporter';
 import parseIssue from './parseIssue';
@@ -41,7 +42,36 @@ const generateHtml = async (ctx, reporter) => {
     useLink: !ctx.options.no_link,
     serve: !!ctx.options.serve
   });
-  await fs.writeFile(path.join(outDir, 'index.html'), result, 'utf8');
+  reporter.log('Generated HTML.');
+
+  // Post-procee HTML (auto links, etc)
+  const $ = cheerio.load(result, { normalizeWhitespace: true });
+  $('.ref').each((i, elem) => {
+    const index = $(elem).html();
+    const ref = $(`#ref-${index}`);
+    $(elem).attr('title', ref.text());
+  });
+  if (!ctx.options.no_link) {
+    $('.ref,.fig,.tab').each((i, elem) => {
+      const $elem = $(elem);
+      const type = $elem.attr('class');
+      const link = $('<a>').attr('href', `#${type}-${$elem.text()}`);
+      $elem.wrap(link);
+    });
+    $('ol.references > li').each((i, li) => {
+      const doi = $(li).data('doi');
+      if (!doi) return;
+      const link = $('<a>')
+        .addClass('doi-link')
+        .attr('target', '_blank')
+        .attr('href', `http://doi.org/${doi}`)
+        .text('DOI');
+      $(li).append(link);
+    });
+  }
+  reporter.log('Performed HTML post-processing.');
+
+  await fs.writeFile(path.join(outDir, 'index.html'), $.html(), 'utf8');
 
   const warnUnused = (name, obj, map) => {
     const unused = Object.keys(obj).filter(t => !map.has(t));

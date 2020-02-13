@@ -102,7 +102,7 @@ const replaceBacktick = () => {
           ).trim();
           $('<li>')
             .attr('id', `ref-${index}`)
-            .data('doi', item.doi || '')
+            .attr('data-doi', item.doi || '')
             .attr('value', index + '')
             .html(formatted)
             .appendTo(ol);
