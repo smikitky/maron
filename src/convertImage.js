@@ -14,7 +14,7 @@ const exec = async (command, args, stdin) => {
     process.on('close', code => {
       // if (stderr) console.error(stderr);
       if (code === 0) resolve(stdout);
-      else reject(new Error('Exited with non-zero status code'));
+      else reject(new Error('Exited with non-zero status code\n' + stderr));
     });
   });
 };
