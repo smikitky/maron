@@ -12,7 +12,7 @@ test('Run using init-template', async () => {
       m => (mockReporter[m] = jest.fn())
     );
     fs.emptyDir(outDir);
-    await run(srcDir, outDir, {}, mockReporter);
+    await run(srcDir, outDir, { text_only: true }, mockReporter);
     expect(mockReporter.error).not.toBeCalled();
     expect(mockReporter.output).toBeCalledWith('index.html');
     expect(mockReporter.output).toBeCalledWith('style.css');
