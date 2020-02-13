@@ -128,29 +128,40 @@ const convertImages = async (ctx, reporter) => {
   }
   for (const [tag, index] of figTagMap.entries()) {
     const figure = figures[tag];
-    const inFile = await findFileMatchingTag(sourceDir, 'Figure', tag, [
-      'jpg',
-      'png',
-      'pdf'
-    ]);
+    const subFigures = Array.isArray(figure.subFigures)
+      ? figure.subFigures
+      : [{}];
+    for (const subFigure of subFigures) {
+      const postfix = subFigure.name ? '-' + subFigure.name : '';
+      const inFile = await findFileMatchingTag(
+        sourceDir,
+        'Figure',
+        tag + postfix,
+        ['jpg', 'png', 'pdf']
+      );
+      reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
 
-    reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
+      const tiffOut = path.join(outDir, `fig-${index}${postfix}.tiff`);
+      const tiffOutBuf = await convertImage(fs.createReadStream(inFile), {
+        resolution: subFigure.resolution || figure.resolution,
+        outType: 'tiff'
+      });
+      await fs.writeFile(tiffOut, tiffOutBuf);
+      reporter.output(tiffOut);
 
-    const tiffOut = path.join(outDir, `fig-${index}.tiff`);
-    const tiffOutBuf = await convertImage(fs.createReadStream(inFile), {
-      resolution: figure.resolution,
-      outType: 'tiff'
-    });
-    await fs.writeFile(tiffOut, tiffOutBuf);
-    reporter.output(tiffOut);
-
-    const pngOut = path.join(outDir, `fig-${index}.png`);
-    const pngOutBuf = await convertImage(fs.createReadStream(inFile), {
-      resolution: figure.webResolution || figure.resolution || 72,
-      outType: 'png'
-    });
-    await fs.writeFile(pngOut, pngOutBuf);
-    reporter.output(pngOut);
+      const pngOut = path.join(outDir, `fig-${index}${postfix}.png`);
+      const pngOutBuf = await convertImage(fs.createReadStream(inFile), {
+        resolution:
+          subFigure.webResolution ||
+          subFigure.resolution ||
+          figure.webResolution ||
+          figure.resolution ||
+          72,
+        outType: 'png'
+      });
+      await fs.writeFile(pngOut, pngOutBuf);
+      reporter.output(pngOut);
+    }
   }
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
 };

@@ -148,7 +148,24 @@ const replaceBacktick = () => {
         figTagMap,
         'figure',
         'fig',
-        ($, tag, index) => $('<img>').attr('src', `fig-${index}.png`),
+        ($, tag, index) => {
+          const figure = figures[tag];
+          const div = $('<div>');
+          const subFigures = Array.isArray(figure.subFigures)
+            ? figure.subFigures
+            : [{ name: '' }];
+          for (const subFigure of subFigures) {
+            const prefix = subFigure.name ? '-' + subFigure.name : '';
+            if (prefix)
+              $('<div>')
+                .text(subFigure.name)
+                .appendTo(div);
+            $('<img>')
+              .attr('src', `fig-${index}${prefix}.png`)
+              .appendTo(div);
+          }
+          return div;
+        },
         styles.figCaption
       );
     };

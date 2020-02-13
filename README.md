@@ -86,13 +86,21 @@ Ron will convert your figures into TIFF (for submission) and PNG (for HTML previ
 my-rabbit:
   caption: My rabbit.
   resolution: 300
+  webResolution: 150
 my-cat:
-  caption: My cat.
+  caption: Face (a) and tail (b) of my cat.
+  resolution: 150
+  subFigures:
+    - name: (a)
+    - name: (b)
+      resolution: 120
 ```
 
-Source image files can be PDF (`*.pdf`), PNG (`*.png`) or JPEG (`*.jpg`). They must be placed under your source directory with appropreate extentions (e.g., `src/my-rabbit.pdf`, `src/my-cat.jpg`).
+The format of source image files can be PDF (`*.pdf`), PNG (`*.png`) or JPEG (`*.jpg`). They must be placed under your source directory with appropreate extentions (e.g., `src/my-rabbit.pdf`, `src/my-cat-(a).jpg`).
 
-Specify `resolution` to determine the resolution to your PDF.
+Specify `resolution` (and `webResolution`) to determine the resolution to your PDF.
+
+When there are sub-figures, they can be specified using the `subFigures` array. The element of the `sugFigures` is an object containing a `name` (typically `a`, `(b)`, etc) and optional `resolution`/`webResolution` which overrides the root resolution.
 
 ### Tables (`tables.yml`)
 
