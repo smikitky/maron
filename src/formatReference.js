@@ -3,12 +3,13 @@ import capitalizeTitle from 'capitalize-title';
 
 export const authorList = (
   authors,
-  { max = 3, delimiter = ', ', etal = ' et al' } = {}
+  { max = 3, truncateTo, delimiter = ', ', etal = ' et al' } = {}
 ) => {
   const hasEtAl = authors[authors.length - 1] === 'ET_AL';
+  if (typeof truncateTo === 'undefined') truncateTo = max;
   if (hasEtAl) authors = authors.slice(0, authors.length - 1);
   if (authors.length > max) {
-    return authors.slice(0, max).join(', ') + etal;
+    return authors.slice(0, truncateTo).join(', ') + etal;
   } else {
     return authors.join(delimiter);
   }

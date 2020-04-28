@@ -6,6 +6,12 @@ describe('authorList', () => {
     expect(authorList(['J Doe', 'A Smith'])).toBe('J Doe, A Smith');
     expect(authorList(['J Doe', 'A Smith'], { max: 1 })).toBe('J Doe et al');
     expect(authorList(['J Doe', 'A Smith'], { max: 2 })).toBe('J Doe, A Smith');
+    expect(authorList(['J Doe', 'A Smith'], { max: 2, truncateTo: 1 })).toBe(
+      'J Doe, A Smith'
+    );
+    expect(
+      authorList(['J Doe', 'A Smith', 'B White'], { max: 2, truncateTo: 1 })
+    ).toBe('J Doe et al');
   });
 });
 
