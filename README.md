@@ -58,9 +58,11 @@ This is the main manuscript written in the Markdown format. In addition to all t
 - Custom class/id using [markdown-it-attrs](https://www.npmjs.com/package/markdown-it-attrs)
 - Custom backtick tags
   - Article citation: `` `ref:<tag>` `` (e.g., `` `ref:yamada2010` ``)
-  - References list: `` `references` ``
+  - Reference list: `` `references` ``
   - Figure reference `` `fig:<tag>` `` (e.g., `` `fig:mydog` ``)
-  - Figures list: `` `figures` ``
+  - Figure list: `` `figures` ``
+  - Table reference `` `tab:<tag>` `` (e.g., `` `tab:prices` ``)
+  - Table list: `` `tables` ``
 
 ### References (`references.yaml`)
 
