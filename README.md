@@ -70,15 +70,19 @@ Your reference list should be placed as `src/references.yaml`.
 
 ```yaml
 yamada2010:
-  authors: T Yamada, I Suzuki, H Eto et al.
+  authors: Yamada T, Suzuki I, Eto H
   title: 'Alice in Wonderland'
   journal: Science
   issue: '2010;5(6): 1038-1053'
+online2015:
+  literal: Natural number. https://en.wikipedia.org/wiki/Natural_number. Accessed May 10, 2013.
 ```
 
-Here `yamda2010` is the "tag" of this entry. In the main manuscript file, this entry is referred to like `` `ref:yamada2010` ``.
+Here `yamda2010` and `online2015` are the "tags". In the main manuscript file, the tags are referred to like `` `ref:yamada2010` ``. Near the end of your manuscript, you can output the references list by writing `` `references` ``.
 
-Near the end of your manuscript, you can output the references list by writing `` `references` ``.
+You should list *all* of the authors in the `authors` attribute. This will be formatted using `authorsList` formatter described below.
+
+Ron supports formatting of typical journal articles, but it does not support atypical references such as those to book chapters and web pages. In such cases, use the `literal` attribute, which will not be formatted at all.
 
 ### Figures (`figures.yaml`)
 
@@ -138,14 +142,28 @@ tabCaption:
 
 Values named `format` are processed using the Handlebar template engine.
 
-- `reference.format`: Defines the references format.
+- `reference.format`: Defines the references format. See the explanation below.
 - `citation.format`: Defines the citation format. For example, you can set this to `<sup>{{{items}}}</sup>` instead of the default.
 - `citation.itemSep` (default: `','`): Defines the comma between cite index. ([])
-- `citation.hyphen` (default: `'-'`)
+- `citation.hyphen` (default: `'-'`): Defines the hyphen used when three or more successive items are cited.
 - `figCaption.position` (default: `bottom`): Defines the position of the caption. One of `top`, `bottom` or `none`.
 - `figCaption.format`: Defines the format of figure captions.
-- `tabCaption.position` (default: `top`)
+- `tabCaption.position` (default: `top`): Defines the position of the caption. One of `top`, `bottom` or `none`.
 - `tabCaption.format`: Defines the format of table captions.
+
+#### `reference.format` usage
+
+You can use the following Handlebars [helpers](https://handlebarsjs.com/guide/expressions.html#helpers), some of which take hash (i.e., key-value pair) arguments.
+
+- `authorList`: Used with `authors`, formats the author list of the citing material.
+  - `max` (default: `3`): When the number of authors exceeds this number, the list will be truncated to `truncateTo` items and " et al" would be added at the end.
+  - `truncateTo` (default: the same as `max`): See above.
+  - `etAl` (default: ' et al'): Customizes the "et al" string.
+  - `delimitor` (default: `, `): Customizes the comma string between authors.
+- `capitalize`: Used with `title`, capitalize each words of the title using [capitalize-title](https://www.npmjs.com/package/capitalize-title).
+- `pages`: Used with `issue.pages`, formats the pages.
+  - `compact` (default: `false`): When true, uses the compact format, e.g., `1025-31` instead of `1025-1031`.
+  - `delim` (default: '-'): Customizes the delimiter used between the page numbers.
 
 ### Custom HTML (`style.css`)
 
