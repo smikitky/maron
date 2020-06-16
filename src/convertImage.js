@@ -7,11 +7,11 @@ const exec = async (command, args, stdin) => {
     const process = cp.spawn(command, args);
     stdin.pipe(process.stdin);
     let stdout, stderr;
-    const catout = concat(buffer => (stdout = buffer));
-    const caterr = concat(buffer => (stderr = buffer));
+    const catout = concat((buffer) => (stdout = buffer));
+    const caterr = concat((buffer) => (stderr = buffer));
     process.stdout.pipe(catout);
     process.stderr.pipe(caterr);
-    process.on('close', code => {
+    process.on('close', (code) => {
       // if (stderr) console.error(stderr);
       if (code === 0) resolve(stdout);
       else reject(new Error('Exited with non-zero status code\n' + stderr));
@@ -38,6 +38,8 @@ const convertImage = async (inputStream, options = {}) => {
   // PDF files will be rasterized using this resolution
   const rasterResolutionOption = resolution ? ['-density', resolution] : [];
 
+  const compressOption = outType === 'tiff' ? ['-compress', 'lzw'] : [];
+
   // prettier-ignore
   const args = [
     ...subCommand,
@@ -45,6 +47,7 @@ const convertImage = async (inputStream, options = {}) => {
     '-', // Read from stdin
     '-units', 'PixelsPerInch', // Specifying this is important
     // '-density', resolution, // Set output resolution of rasterized image
+    ...compressOption,
     `${outType}:-` // Output to stdout
   ];
 
