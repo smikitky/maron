@@ -1,6 +1,6 @@
-# Ron
+# MaRon
 
-Ron is a helper script for writing manuscripts in markdown.
+MaRon is a helper script for writing manuscripts in markdown.
 
 - Converts a markdown manuscript file into HTML.
 - Manages reference list and citation numbers (`[2-3,7]`) in your manuscript.
@@ -22,19 +22,19 @@ Ron is a helper script for writing manuscripts in markdown.
 1. Install Ron via NPM.
 
    ```bash
-   $ npm install @smikitky/ron
+   $ npm install @smikitky/maron
    ```
 
 1. Run the setup script. This will create a directory called `src` in your project and fills it with sample files.
 
    ```bash
-   $ npx ron --init
+   $ npx maron --init
    ```
 
 1. Write your manuscript and compile.
 
    ```bash
-   $ npx ron
+   $ npx maron
    ```
 
    The `--watch` (or `-w`) option is useful to recompile everything when you made some change to the source directory. Use `npx ron --help` to see other available options.
@@ -80,7 +80,7 @@ online2015:
 
 Here `yamda2010` and `online2015` are the "tags". In the main manuscript file, the tags are referred to like `` `ref:yamada2010` ``. Near the end of your manuscript, you can output the references list by writing `` `references` ``.
 
-You should list *all* of the authors in the `authors` attribute. This will be formatted using `authorsList` formatter described below.
+You should list _all_ of the authors in the `authors` attribute. This will be formatted using `authorsList` formatter described below.
 
 Ron supports formatting of typical journal articles, but it does not support atypical references such as those to book chapters and web pages. In such cases, use the `literal` attribute, which will not be formatted at all.
 

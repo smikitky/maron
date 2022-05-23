@@ -1,10 +1,10 @@
 {
-  "name": "@smikitky/ron",
+  "name": "@smikitky/maron",
   "version": "3.5.0",
   "description": "Helper for writing articles with markdown",
   "main": "index.js",
   "bin": {
-    "ron": "./index.js"
+    "maron": "./index.js"
   },
   "engines": {
     "node": ">=10.12"
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/smikitky/ron.git"
+    "url": "git+https://github.com/smikitky/maron.git"
   },
   "author": "Soichiro Miki",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/smikitky/ron/issues"
+    "url": "https://github.com/smikitky/maron/issues"
   },
-  "homepage": "https://github.com/smikitky/ron#readme",
+  "homepage": "https://github.com/smikitky/maron#readme",
   "prettier": {
     "singleQuote": true
   },
