@@ -1,7 +1,9 @@
 .editorconfig
 *.tgz
-*.ts
+/src
 /coverage
 /test-out
 /.github
 /.vscode
+/tsconfig*
+/jest.config.js
