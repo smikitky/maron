@@ -179,7 +179,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
 };
 
-const parseReference = (ref: any) => {
+const parseReference = (ref: any): ReferenceEntry => {
   return {
     ...ref,
     authors:

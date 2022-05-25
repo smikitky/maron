@@ -1,12 +1,5 @@
 import _ from 'lodash';
-
-interface ParsedIssue {
-  year: string;
-  month: string;
-  volume: string;
-  issue: string;
-  pages: string | [start: number, end: number];
-}
+import { Issue } from './types';
 
 const parseIssue = (str: string) => {
   const match = str
@@ -15,8 +8,7 @@ const parseIssue = (str: string) => {
       /^(?<year>\d+)(\s+(?<month>[A-Za-z]+))?;\s*(?<volume>\d+)\((?<issue>(\d|\-)+)\)((\:\s*|\s+)(?<pages>.+))?$/
     );
   if (!match) throw new Error('Invalid issue format: ' + str);
-  let { year, month, volume, issue, pages } =
-    match.groups! as unknown as ParsedIssue;
+  let { year, month, volume, issue, pages } = match.groups! as unknown as Issue;
 
   const pageMatch = (pages as string).match(/^(\d+)(-(\d+))?$/);
   if (pageMatch) {

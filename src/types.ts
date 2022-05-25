@@ -29,21 +29,39 @@ export interface MaRonStyle {
   tabCaption: CaptionStyle;
 }
 
+export interface Issue {
+  year: string;
+  month: string;
+  volume: string;
+  issue: string;
+  pages: string | [start: number, end: number];
+}
+
 export interface ReferenceEntry {
+  authors?: string | string[];
+  title?: string;
+  journal?: string;
+  issue?: Issue;
+  literal?: string;
   [key: string]: any;
 }
 
 export interface TableEntry {
+  caption: string;
   [key: string]: any;
 }
 
 export interface FigureEntry {
+  caption: string;
   [key: string]: any;
 }
 
 export interface MaRonContext {
   sourceDir: string;
   outDir: string;
+  /**
+   * Main source file content (markdown).
+   */
   sourceFile: string;
   references: { [tag: string]: ReferenceEntry };
   refTagMap: Map<string, number>;
