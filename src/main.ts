@@ -1,28 +1,15 @@
-import path from 'path';
 import chokidar from 'chokidar';
 import dashdash from 'dashdash';
-import _ from 'lodash';
-import fs from 'fs-extra';
-import run from './run';
-import url from 'url';
-import createReporter from './reporter';
-import serve from './serve';
 import { EventEmitter } from 'events';
+import fs from 'fs-extra';
+import _ from 'lodash';
+import path from 'path';
+import createReporter from './reporter';
+import run from './run';
+import serve from './serve';
+import { MainOptions } from './types';
 
 // const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-
-export interface MainOptions {
-  init?: boolean;
-  src: string;
-  out: string;
-  watch?: boolean;
-  verbose?: boolean;
-  no_link?: boolean;
-  text_only?: boolean;
-  clear?: boolean;
-  serve?: boolean;
-  help?: boolean;
-}
 
 const main = async () => {
   const parser = dashdash.createParser({

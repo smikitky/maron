@@ -1,4 +1,6 @@
-export default {
+import { MaRonStyle } from './types';
+
+const defaultStyle: MaRonStyle = {
   reference: {
     format: '{{authors}} ({{year}}) {{title}}'
   },
@@ -16,3 +18,5 @@ export default {
     format: '<b>Table {{index}}</b>: {{{caption}}}'
   }
 };
+
+export default defaultStyle;

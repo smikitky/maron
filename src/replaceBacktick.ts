@@ -4,7 +4,7 @@ import MarkdownIt from 'markdown-it';
 import formatReference from './formatReference';
 import formatTag from './formatTag';
 import { Reporter } from './reporter';
-import { MaRonContext } from './run';
+import { CaptionStyle, FigureEntry, MaRonContext, TableEntry } from './types';
 
 /**
  * Provides a custom markdown-it plug-in
@@ -69,15 +69,15 @@ const replaceBacktick = () => {
     };
 
     const replaceFigOrTab = (
-      list: { [tag: string]: any },
-      map: Map<string, any>,
+      list: { [tag: string]: FigureEntry } | { [tag: string]: TableEntry },
+      map: Map<string, number>,
       name: 'figure' | 'table',
       className: string
     ) => {
       const item = list[tag];
       if (!item) throw new Error(`Unknown ${name} tag: ` + tag);
       const index = map.has(tag)
-        ? map.get(tag)
+        ? map.get(tag)!
         : (() => {
             const index = name === 'figure' ? figCounter++ : tabCounter++;
             map.set(tag, index);
@@ -85,7 +85,7 @@ const replaceBacktick = () => {
             return index;
           })();
       const $ = cheerio.load('');
-      const span = $('<span>').addClass(className).text(index);
+      const span = $('<span>').addClass(className).text(String(index));
       addRawHtmlToken(span.toString());
     };
 
@@ -121,7 +121,7 @@ const replaceBacktick = () => {
     };
 
     const replaceFiguresOrTables = (
-      list: { [tag: string]: any },
+      list: { [tag: string]: FigureEntry | TableEntry },
       map: Map<string, number>,
       name: 'figure' | 'table',
       className: string,
@@ -130,7 +130,7 @@ const replaceBacktick = () => {
         tag: string,
         index: number
       ) => cheerio.Cheerio,
-      style: any
+      style: CaptionStyle
     ) => {
       const $ = cheerio.load('');
       const div = $('<div>').addClass(`list-${name}`);

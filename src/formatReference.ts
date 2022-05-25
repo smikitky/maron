@@ -1,5 +1,6 @@
 import Handlebars from 'handlebars';
 import capitalizeTitle from 'capitalize-title';
+import { ReferenceEntry } from './types';
 
 interface AuthorListOptions {
   max?: number;
@@ -64,7 +65,7 @@ Handlebars.registerHelper('pages', (text, { hash }) => formatPages(text, hash));
 
 Handlebars.registerHelper('capitalize', capitalizeTitle);
 
-const formatReference = (refData: any, style: string) => {
+const formatReference = (refData: ReferenceEntry, style: string) => {
   const template = Handlebars.compile(style);
   return template(refData);
 };

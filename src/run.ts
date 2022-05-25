@@ -12,12 +12,17 @@ import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
 import convertImage from './convertImage';
 import defaultStyle from './defaultStyle';
-import { MainOptions } from './main';
 import parseAuthors from './parseAuthors';
 import parseIssue from './parseIssue';
 import readFileIfExists from './readFileIfExists';
 import replaceBacktick from './replaceBacktick';
 import { Reporter } from './reporter';
+import {
+  FigureEntry,
+  MainOptions,
+  MaRonContext,
+  ReferenceEntry
+} from './types';
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
@@ -74,8 +79,8 @@ const generateHtml = async (ctx: MaRonContext, reporter: Reporter) => {
 
   const warnUnused = (
     name: string,
-    obj: { [tag: string]: any },
-    map: Map<string, any>
+    obj: { [tag: string]: ReferenceEntry | FigureEntry },
+    map: Map<string, number>
   ) => {
     const unused = Object.keys(obj).filter(t => !map.has(t));
     if (unused.length) {
@@ -182,20 +187,6 @@ const parseReference = (ref: any) => {
     issue: typeof ref.issue === 'string' ? parseIssue(ref.issue) : ref.issue
   };
 };
-
-export interface MaRonContext {
-  sourceDir: string;
-  outDir: string;
-  sourceFile: string;
-  references: { [tag: string]: any };
-  refTagMap: Map<string, number>;
-  figures: { [tag: string]: any };
-  figTagMap: Map<string, number>;
-  tables: { [tag: string]: any };
-  tabTagMap: Map<string, number>;
-  styles: any;
-  options: any;
-}
 
 /**
  * Load source files into memory.
