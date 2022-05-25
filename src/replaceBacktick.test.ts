@@ -1,14 +1,13 @@
-const esmRequire = require('esm')(module);
-const MarkdownIt = require('markdown-it');
-const replaceBacktick = esmRequire('./replaceBacktick').default;
-const defaultStyle = esmRequire('./defaultStyle').default;
-const cheerio = require('cheerio');
+import MarkdownIt from 'markdown-it';
+import replaceBacktick from './replaceBacktick';
+import defaultStyle from './defaultStyle';
+import cheerio from 'cheerio';
 
 describe('replaceBacktick', () => {
-  let md;
+  let md: MarkdownIt;
 
   beforeEach(() => {
-    const mockReporter = {};
+    const mockReporter: any = {};
     ['log', 'info', 'warn', 'error', 'output', 'section'].forEach(
       m => (mockReporter[m] = jest.fn())
     );
@@ -24,7 +23,7 @@ describe('replaceBacktick', () => {
         figures: { shibuya: { caption: 'flower' } },
         figTagMap: new Map(),
         styles: defaultStyle
-      },
+      } as any,
       mockReporter
     );
   });

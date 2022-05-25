@@ -1,18 +1,25 @@
 import _ from 'lodash';
 
+interface FormatTagOptions {
+  itemSep?: string;
+  hyphen?: string;
+}
+
 /**
  * Does a conversion like `[1,3,4,6,7,8]` to `'1,3,4,6-8'`.
- * @param {number[]} arr The input array.
+ * @param arr - The input array.
  */
-const formatTag = (arr, { itemSep = ',', hyphen = '-' } = {}) => {
-  let min = undefined,
-    max = undefined,
+const formatTag = (arr: number[], options: FormatTagOptions = {}) => {
+  const { itemSep = ',', hyphen = '-' } = options;
+  let min: number | undefined = undefined,
+    max: number | undefined = undefined,
     result = '';
 
   if (
     !Array.isArray(arr) ||
     arr.some(
-      item => typeof item !== 'number' || item < 1 || Math.floor(item) !== item
+      (item) =>
+        typeof item !== 'number' || item < 1 || Math.floor(item) !== item
     )
   ) {
     throw new TypeError('Input must be an array of positive integers');
@@ -22,9 +29,9 @@ const formatTag = (arr, { itemSep = ',', hyphen = '-' } = {}) => {
   const flush = () => {
     if (result) result += itemSep;
     result +=
-      max > min + 1
+      max! > min! + 1
         ? min + hyphen + max
-        : max === min + 1
+        : max === min! + 1
         ? min + itemSep + max
         : min;
     min = max = undefined;
@@ -33,7 +40,7 @@ const formatTag = (arr, { itemSep = ',', hyphen = '-' } = {}) => {
   for (const i of arr) {
     if (min === undefined) {
       min = max = i;
-    } else if (i === max + 1) {
+    } else if (i === max! + 1) {
       max = i;
     } else {
       flush();

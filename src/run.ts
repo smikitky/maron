@@ -1,24 +1,23 @@
+import cheerio from 'cheerio';
+import extend from 'extend';
+import fs from 'fs-extra';
+import glob from 'glob-promise';
+import Handlebars from 'handlebars';
+import yaml from 'js-yaml';
+import _ from 'lodash';
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
-import replaceBacktick from './replaceBacktick';
 import path from 'path';
-import url from 'url'; // Node >= 10.12 required
-import fs from 'fs-extra';
-import glob from 'glob-promise';
-import yaml from 'js-yaml';
-import _ from 'lodash';
-import Handlebars from 'handlebars';
-import extend from 'extend';
-import cheerio from 'cheerio';
-
-import createReporter from './reporter';
-import parseIssue from './parseIssue';
-import parseAuthors from './parseAuthors';
 import convertImage from './convertImage';
-import readFileIfExists from './readFileIfExists';
 import defaultStyle from './defaultStyle';
+import { MainOptions } from './main';
+import parseAuthors from './parseAuthors';
+import parseIssue from './parseIssue';
+import readFileIfExists from './readFileIfExists';
+import replaceBacktick from './replaceBacktick';
+import { Reporter } from './reporter';
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
@@ -26,9 +25,9 @@ const md = MarkdownIt({ html: true })
   .use(attrs)
   .use(mdInclude)
   .use(backticks.register);
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+// const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-const generateHtml = async (ctx, reporter) => {
+const generateHtml = async (ctx: MaRonContext, reporter: Reporter) => {
   const { sourceFile, outDir, references, refTagMap, figures, figTagMap } = ctx;
   reporter.section('Generating HTML...');
   backticks.reset(ctx, reporter);
@@ -73,7 +72,11 @@ const generateHtml = async (ctx, reporter) => {
 
   await fs.writeFile(path.join(outDir, 'index.html'), $.html(), 'utf8');
 
-  const warnUnused = (name, obj, map) => {
+  const warnUnused = (
+    name: string,
+    obj: { [tag: string]: any },
+    map: Map<string, any>
+  ) => {
     const unused = Object.keys(obj).filter(t => !map.has(t));
     if (unused.length) {
       reporter.warn(`Unused ${name}: ` + unused.join(', '));
@@ -85,7 +88,7 @@ const generateHtml = async (ctx, reporter) => {
   reporter.output('index.html');
 };
 
-const generateCss = async (ctx, reporter) => {
+const generateCss = async (ctx: MaRonContext, reporter: Reporter) => {
   const { sourceDir, outDir } = ctx;
   reporter.section('Generating CSS...');
 
@@ -106,7 +109,12 @@ const generateCss = async (ctx, reporter) => {
   reporter.output('style.css');
 };
 
-const findFileMatchingTag = async (sourceDir, name, tag, extentions) => {
+const findFileMatchingTag = async (
+  sourceDir: string,
+  name: string,
+  tag: string,
+  extentions: string[]
+) => {
   const files = await glob(
     path.resolve(sourceDir, tag + '.{' + extentions.join(',') + '}')
   );
@@ -114,12 +122,12 @@ const findFileMatchingTag = async (sourceDir, name, tag, extentions) => {
     throw new Error(`Figure "${tag}" not found.`);
   }
   if (files.length > 1) {
-    throw new Error(`${name} "${figure.tag}" matched two or more file names.`);
+    throw new Error(`${name} "${tag}" matched two or more file names.`);
   }
   return files[0];
 };
 
-const convertImages = async (ctx, reporter) => {
+const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
   const { sourceDir, outDir, figures, figTagMap, options } = ctx;
   reporter.section('Converting Images...');
   if (options.text_only) {
@@ -166,7 +174,7 @@ const convertImages = async (ctx, reporter) => {
   reporter.log(`Converted ${figTagMap.size} source image(s).`);
 };
 
-const parseReference = ref => {
+const parseReference = (ref: any) => {
   return {
     ...ref,
     authors:
@@ -175,13 +183,29 @@ const parseReference = ref => {
   };
 };
 
+export interface MaRonContext {
+  sourceDir: string;
+  outDir: string;
+  sourceFile: string;
+  references: { [tag: string]: any };
+  refTagMap: Map<string, number>;
+  figures: { [tag: string]: any };
+  figTagMap: Map<string, number>;
+  tables: { [tag: string]: any };
+  tabTagMap: Map<string, number>;
+  styles: any;
+  options: any;
+}
+
 /**
  * Load source files into memory.
- * @param {string} sourceDir
- * @param {object} options
- * @param {ReturnType<createReporter>} reporter
  */
-const createContext = async (sourceDir, outDir, options, reporter) => {
+const createContext = async (
+  sourceDir: string,
+  outDir: string,
+  options: MainOptions,
+  reporter: Reporter
+): Promise<MaRonContext> => {
   reporter.section('Loading Source Files...');
   const sourceFileName = path.join(sourceDir, 'index.md');
   const sourceFile = await readFileIfExists(sourceFileName);
@@ -207,23 +231,23 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   }
 
-  let figures = [];
+  let figures: MaRonContext['figures'] = {};
   const figuresFileName = path.join(sourceDir, 'figures.yaml');
   const figuresFile = await readFileIfExists(figuresFileName);
   if (!figuresFile) {
     reporter.warn('figures.yaml not found.');
   } else {
-    figures = yaml.load(figuresFile);
+    figures = yaml.load(figuresFile) as any;
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   }
 
-  let tables = [];
+  let tables: MaRonContext['tables'] = {};
   const tablesFileName = path.join(sourceDir, 'tables.yaml');
   const tablesFile = await readFileIfExists(tablesFileName);
   if (!tablesFile) {
     reporter.warn('tables.yaml not found.');
   } else {
-    tables = yaml.load(tablesFile);
+    tables = yaml.load(tablesFile) as any;
     for (const [tag, item] of Object.entries(tables)) {
       const file = await findFileMatchingTag(sourceDir, 'Table', tag, [
         'md',
@@ -251,14 +275,19 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
   };
 };
 
-const run = async (sourceDir, outDir, options, reporter) => {
+const run = async (
+  sourceDir: string,
+  outDir: string,
+  options: MainOptions,
+  reporter: Reporter
+) => {
   try {
     await fs.ensureDir(outDir);
     const ctx = await createContext(sourceDir, outDir, options, reporter);
     await generateHtml(ctx, reporter);
     await convertImages(ctx, reporter);
     await generateCss(ctx, reporter);
-  } catch (err) {
+  } catch (err: any) {
     reporter.error(err.message);
   }
 };

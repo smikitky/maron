@@ -1,5 +1,4 @@
-const esmRequire = require('esm')(module);
-const formatTag = esmRequire('./formatTag').default;
+import formatTag from './formatTag';
 
 test('basic', () => {
   expect(formatTag([1])).toBe('1');
@@ -19,5 +18,6 @@ test('unordered', () => {
 test('errors', () => {
   expect(() => formatTag([0])).toThrow(TypeError);
   expect(() => formatTag([1.5])).toThrow(TypeError);
+  // @ts-expect-error
   expect(() => formatTag('foo')).toThrow(TypeError);
 });

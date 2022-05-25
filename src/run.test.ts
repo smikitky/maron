@@ -1,13 +1,12 @@
-const esmRequire = require('esm')(module);
-const run = esmRequire('./run').default;
-const fs = require('fs-extra');
-const path = require('path');
+import run from './run';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 test('Run using init-template', async () => {
   const srcDir = path.resolve(__dirname, '..', 'init-template');
   const outDir = path.resolve(__dirname, '..', 'test-out');
   try {
-    const mockReporter = {};
+    const mockReporter: any = {};
     ['log', 'info', 'warn', 'error', 'output', 'section'].forEach(
       m => (mockReporter[m] = jest.fn())
     );

@@ -2,16 +2,16 @@ import cp from 'child_process';
 import concat from 'concat-stream';
 import { Readable } from 'stream';
 
-const exec = async (command, args, stdin) => {
-  return new Promise((resolve, reject) => {
+const exec = async (command: string, args: string[], stdin: Readable) => {
+  return new Promise<Buffer>((resolve, reject) => {
     const process = cp.spawn(command, args);
     stdin.pipe(process.stdin);
-    let stdout, stderr;
-    const catout = concat((buffer) => (stdout = buffer));
-    const caterr = concat((buffer) => (stderr = buffer));
+    let stdout: Buffer, stderr: Buffer;
+    const catout = concat(buffer => (stdout = buffer));
+    const caterr = concat(buffer => (stderr = buffer));
     process.stdout.pipe(catout);
     process.stderr.pipe(caterr);
-    process.on('close', (code) => {
+    process.on('close', code => {
       // if (stderr) console.error(stderr);
       if (code === 0) resolve(stdout);
       else reject(new Error('Exited with non-zero status code\n' + stderr));
@@ -19,13 +19,21 @@ const exec = async (command, args, stdin) => {
   });
 };
 
+interface ConvertImageOptions {
+  resolution?: number;
+  outType?: 'png' | 'tiff';
+}
+
 /**
  * Converts a PDF file to TIFF/PNG using ImageMagick.
  * ImageMagick and Ghostscript must be installed on the system.
- * @param {Readable} inputStream Content of the input file.
- * @param {object} options
+ * @param inputStream - Content of the input file.
+ * @param options - Options
  */
-const convertImage = async (inputStream, options = {}) => {
+const convertImage = async (
+  inputStream: Readable,
+  options: ConvertImageOptions = {}
+) => {
   const { resolution = 600, outType = 'png' } = options;
 
   const [command, subCommand] = (() => {
@@ -36,7 +44,9 @@ const convertImage = async (inputStream, options = {}) => {
   })();
 
   // PDF files will be rasterized using this resolution
-  const rasterResolutionOption = resolution ? ['-density', resolution] : [];
+  const rasterResolutionOption = resolution
+    ? ['-density', String(resolution)]
+    : [];
 
   const compressOption = outType === 'tiff' ? ['-compress', 'lzw'] : [];
 

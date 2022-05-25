@@ -4,12 +4,25 @@ import dashdash from 'dashdash';
 import _ from 'lodash';
 import fs from 'fs-extra';
 import run from './run';
-import url from 'url'; // Node >= 10.12 required
+import url from 'url';
 import createReporter from './reporter';
 import serve from './serve';
 import { EventEmitter } from 'events';
 
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+// const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+export interface MainOptions {
+  init?: boolean;
+  src: string;
+  out: string;
+  watch?: boolean;
+  verbose?: boolean;
+  no_link?: boolean;
+  text_only?: boolean;
+  clear?: boolean;
+  serve?: boolean;
+  help?: boolean;
+}
 
 const main = async () => {
   const parser = dashdash.createParser({
@@ -28,19 +41,20 @@ const main = async () => {
   });
 
   const help = () => {
-    console.log('ron - Markdown utility for academic writing\n');
-    console.log('Usage: npx ron [options]');
+    console.log('maron - Markdown utility for academic writing\n');
+    console.log('Usage: npx maron [options]');
     console.log(parser.help({ includeDefault: true }));
   };
 
-  let options;
-  try {
-    options = parser.parse(process.argv);
-  } catch (err) {
-    console.error(err.message);
-    help();
-    process.exit(1);
-  }
+  const options = (() => {
+    try {
+      return parser.parse(process.argv) as any as MainOptions;
+    } catch (err: any) {
+      console.error(err.message);
+      help();
+      process.exit(1);
+    }
+  })();
 
   if (options.help) {
     help();
@@ -51,7 +65,7 @@ const main = async () => {
 
   if (options.init) {
     const { src } = options;
-    reporter.section('Initializing a New Ron Project...');
+    reporter.section('Initializing a New MaRon Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
       await fs.ensureDir(src);
@@ -60,7 +74,7 @@ const main = async () => {
         errorOnExist: true
       });
       reporter.log(`Created an empty project under ${src}.`);
-    } catch (err) {
+    } catch (err: any) {
       reporter.error(err.message);
       reporter.error('Is your src directory empty and writable?');
     }
@@ -88,7 +102,7 @@ const main = async () => {
         notify.emit('change');
       });
     }, 300);
-    chokidar.watch('./src').on('change', handler);
+    chokidar.watch(options.src).on('change', handler);
   }
 };
 

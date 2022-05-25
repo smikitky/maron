@@ -1,5 +1,4 @@
-const esmRequire = require('esm')(module);
-const { authorList, formatPages } = esmRequire('./formatReference');
+import { authorList, formatPages } from './formatReference';
 
 describe('authorList', () => {
   test('basic', () => {

@@ -2,8 +2,9 @@ import Koa from 'koa';
 import koaStatic from 'koa-static';
 import getPort from 'get-port';
 import { PassThrough } from 'stream';
+import { EventEmitter } from 'events';
 
-const notifyUpdates = notify => {
+const notifyUpdates = (notify: EventEmitter): Koa.Middleware => {
   return async (ctx, next) => {
     const stream = new PassThrough();
     const handler = () => {
@@ -22,7 +23,7 @@ const notifyUpdates = notify => {
   };
 };
 
-const serve = async (outDir, notify) => {
+const serve = async (outDir: string, notify: EventEmitter) => {
   const app = new Koa();
   const notifyMiddleware = notifyUpdates(notify);
   app.use(async (ctx, next) => {

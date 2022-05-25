@@ -1,5 +1,4 @@
-const esmRequire = require('esm')(module);
-const parseAuthors = esmRequire('./parseAuthors').default;
+import parseAuthors from './parseAuthors';
 
 test('parseAuthors', () => {
   expect(parseAuthors('J Doe, T Yamada')).toEqual(['J Doe', 'T Yamada']);

@@ -2,15 +2,16 @@
   "name": "@smikitky/maron",
   "version": "3.5.0",
   "description": "Helper for writing articles with markdown",
-  "main": "index.js",
+  "main": "./index.js",
   "bin": {
     "maron": "./index.js"
   },
   "engines": {
-    "node": ">=10.12"
+    "node": ">=14.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "rimraf ./lib && tsc -p ./tsconfig.build.json"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,9 @@
   },
   "homepage": "https://github.com/smikitky/maron#readme",
   "prettier": {
-    "singleQuote": true
+    "singleQuote": true,
+    "arrowParens": "avoid",
+    "trailingComma": "none"
   },
   "dependencies": {
     "capitalize-title": "^1.0.0",
@@ -40,7 +43,7 @@
     "glob-promise": "^3.4.0",
     "handlebars": "^4.7.6",
     "indent-string": "^4.0.0",
-    "js-yaml": "^3.13.1",
+    "js-yaml": "^4.1.0",
     "koa": "^2.11.0",
     "koa-static": "^5.0.0",
     "lodash": "^4.17.15",
@@ -50,6 +53,21 @@
     "markdown-it-named-headings": "^1.1.0"
   },
   "devDependencies": {
-    "jest": "^24.9.0"
+    "@types/cheerio": "^0.22.31",
+    "@types/chokidar": "^2.1.3",
+    "@types/concat-stream": "^2.0.0",
+    "@types/dashdash": "^1.14.1",
+    "@types/extend": "^3.0.1",
+    "@types/fs-extra": "^9.0.13",
+    "@types/indent-string": "^4.0.1",
+    "@types/jest": "^27.5.1",
+    "@types/js-yaml": "^4.0.5",
+    "@types/koa": "^2.13.4",
+    "@types/koa-static": "^4.0.2",
+    "@types/lodash": "^4.14.182",
+    "@types/markdown-it": "^12.2.3",
+    "jest": "^28.1.0",
+    "ts-jest": "^28.0.3",
+    "typescript": "^4.7.2"
   }
 }
