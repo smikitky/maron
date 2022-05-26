@@ -127,7 +127,7 @@ const findFileMatchingTag = async (
     path.resolve(sourceDir, tag + '.{' + extentions.join(',') + '}')
   );
   if (files.length === 0) {
-    throw new Error(`Figure "${tag}" not found.`);
+    throw new Error(`${name} "${tag}" not found.`);
   }
   if (files.length > 1) {
     throw new Error(`${name} "${tag}" matched two or more file names.`);
