@@ -12,7 +12,8 @@
   "scripts": {
     "test": "jest",
     "prepublishOnly": "npm run build",
-    "build": "rimraf ./lib && tsc -p ./tsconfig.build.json"
+    "build": "rimraf ./lib && tsc -p ./tsconfig.build.json",
+    "postbuild": "cp src/*.css src/*.html lib"
   },
   "repository": {
     "type": "git",
