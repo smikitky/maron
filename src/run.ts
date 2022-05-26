@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import extend from 'extend';
 import fs from 'fs-extra';
-import glob from 'glob-promise';
+import _glob from 'glob';
 import Handlebars from 'handlebars';
 import yaml from 'js-yaml';
 import _ from 'lodash';
@@ -10,6 +10,7 @@ import attrs from 'markdown-it-attrs';
 import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
+import { promisify } from 'util';
 import convertImage from './convertImage';
 import defaultStyle from './defaultStyle';
 import parseAuthors from './parseAuthors';
@@ -23,6 +24,8 @@ import {
   MaRonContext,
   ReferenceEntry
 } from './types';
+
+const glob = promisify(_glob);
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
