@@ -253,7 +253,10 @@ const createContext = async (sourceDir, outDir, options, reporter) => {
 
 const run = async (sourceDir, outDir, options, reporter) => {
   try {
-    await fs.ensureDir(outDir);
+    await /* TODO: JSFIX could not patch the breaking change:
+    Creating a directory with fs-extra no longer returns the path 
+    Suggested fix: The returned promise no longer includes the path of the new directory */
+    fs.ensureDir(outDir);
     const ctx = await createContext(sourceDir, outDir, options, reporter);
     await generateHtml(ctx, reporter);
     await convertImages(ctx, reporter);

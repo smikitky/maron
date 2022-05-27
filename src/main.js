@@ -54,7 +54,10 @@ const main = async () => {
     reporter.section('Initializing a New Ron Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
-      await fs.ensureDir(src);
+      await /* TODO: JSFIX could not patch the breaking change:
+      Creating a directory with fs-extra no longer returns the path 
+      Suggested fix: The returned promise no longer includes the path of the new directory */
+      fs.ensureDir(src);
       await fs.copy(path.resolve(__dirname, '..', 'init-template'), src, {
         overwrite: false,
         errorOnExist: true
