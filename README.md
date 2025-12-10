@@ -10,13 +10,20 @@ MaRon is a helper script for writing manuscripts in markdown.
 
 1. Install Node.js.
 
-1. Install ImageMagick (>= v7). The latest version (the `magick` command) may not be available from apt. Instead, you can download the latest binary from the official site.
+1. Prepare ImageMagick (v6 or 7). You have several options.
 
-   ```
-   $ wget https://imagemagick.org/archive/binaries/magick
-   $ chmod u+x magick
-   $ mv magick ~/bin (or whereever under $PATH)
-   ```
+   - Version 7 (the `magick` command) may not be available from apt. Instead, you can download the latest binary from the official site.
+
+     ```
+     $ wget https://imagemagick.org/archive/binaries/magick
+     $ chmod u+x magick
+     $ mv magick ~/bin (or whereever under $PATH)
+     ```
+
+   - If you have ImageMagick 6, set `RON_MAGICK=6` to use the `convert` command (default is v7 with `magick convert`).
+   - To run via Docker, set `RON_MAGICK=<image>` and it will call `docker run -i --rm <image>`.
+
+   Ghostscript is required when handling PDFs.
 
 1. Create your project.
 
