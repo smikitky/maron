@@ -1,5 +1,5 @@
 import chokidar from 'chokidar';
-import dashdash from 'dashdash';
+import { cac } from 'cac';
 import { EventEmitter } from 'events';
 import fs from 'node:fs/promises';
 import path from 'path';
@@ -11,46 +11,43 @@ import { type MainOptions } from './types.ts';
 // const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const main = async () => {
-  const parser = dashdash.createParser({
-    options: [
-      { names: ['init'], type: 'bool', help: 'Initialize a new article.' },
-      { names: ['src'], type: 'string', help: 'Source dir', default: './src' },
-      { names: ['out'], type: 'string', help: 'Output dir', default: './out' },
-      { names: ['watch', 'w'], type: 'bool', help: 'Watch source files' },
-      { names: ['verbose', 'v'], type: 'bool', help: 'Print more info' },
-      { names: ['no-link', 'n'], type: 'bool', help: 'Disable links' },
-      { names: ['text-only', 't'], type: 'bool', help: 'No image convertion' },
-      { names: ['clear', 'c'], type: 'bool', help: 'Clear console on re-run' },
-      { names: ['serve', 's'], type: 'bool', help: 'Make instant HTTP server' },
-      { names: ['help', 'h'], type: 'bool', help: 'Prints this message' }
-    ]
-  });
+  const cli = cac('maron');
 
-  const help = () => {
-    console.log('maron - Markdown utility for academic writing\n');
-    console.log('Usage: npx maron [options]');
-    console.log(parser.help({ includeDefault: true }));
+  cli
+    .option('--init', 'Initialize a new article.')
+    .option('--src <dir>', 'Source dir', { default: './src' })
+    .option('--out <dir>', 'Output dir', { default: './out' })
+    .option('-w, --watch', 'Watch source files')
+    .option('-v, --verbose', 'Print more info')
+    .option('-n, --no-link', 'Disable links')
+    .option('-t, --text-only', 'No image convertion')
+    .option('-c, --clear', 'Clear console on re-run')
+    .option('-s, --serve', 'Make instant HTTP server')
+    .option('-h, --help', 'Prints this message');
+
+  const { options } = cli.parse();
+  const parsedOptions: MainOptions = {
+    init: options.init,
+    src: options.src,
+    out: options.out,
+    watch: options.watch,
+    verbose: options.verbose,
+    no_link: options.noLink,
+    text_only: options.textOnly,
+    clear: options.clear,
+    serve: options.serve,
+    help: options.help
   };
 
-  const options = (() => {
-    try {
-      return parser.parse(process.argv) as any as MainOptions;
-    } catch (err: any) {
-      console.error(err.message);
-      help();
-      process.exit(1);
-    }
-  })();
-
-  if (options.help) {
-    help();
+  if (parsedOptions.help) {
+    cli.outputHelp();
     return;
   }
 
-  const reporter = createReporter(options.verbose);
+  const reporter = createReporter(parsedOptions.verbose);
 
-  if (options.init) {
-    const { src } = options;
+  if (parsedOptions.init) {
+    const { src } = parsedOptions;
     reporter.section('Initializing a New MaRon Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
@@ -68,7 +65,7 @@ const main = async () => {
     return;
   }
 
-  const start = () => run(options.src, options.out, options, reporter);
+  const start = () => run(parsedOptions.src, parsedOptions.out, parsedOptions, reporter);
   await start();
 
   const debounce = <T extends (...args: any[]) => void>(
@@ -86,24 +83,24 @@ const main = async () => {
   };
 
   let notify = new EventEmitter();
-  if (options.serve) {
-    serve(options.out, notify);
+  if (parsedOptions.serve) {
+    serve(parsedOptions.out, notify);
   }
 
-  if (options.watch || options.serve) {
+  if (parsedOptions.watch || parsedOptions.serve) {
     let busy = false;
     console.log('Watching source and reference files...');
     const handler = debounce(() => {
       if (busy) return;
       busy = true;
-      if (options.clear) console.clear();
+      if (parsedOptions.clear) console.clear();
       console.log('Recompiling...');
       start().then(() => {
         busy = false;
         notify.emit('change');
       });
     }, 300);
-    chokidar.watch(options.src).on('change', handler);
+    chokidar.watch(parsedOptions.src).on('change', handler);
   }
 };
 
