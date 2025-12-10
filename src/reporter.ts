@@ -1,5 +1,12 @@
 import chalk from 'chalk';
-import indent from 'indent-string';
+
+const indent = (text: string) => {
+  const prefix = '  ';
+  return text
+    .split('\n')
+    .map(line => (line ? prefix + line : line))
+    .join('\n');
+};
 
 export interface Reporter {
   section: (title: string) => void;
@@ -15,7 +22,7 @@ const createReporter = (verbose = false): Reporter => {
     console.log('\n' + chalk.bold.underline(title));
   };
   const log = (data: string) => {
-    console.log(indent(data, 2));
+    console.log(indent(data));
   };
   const output = (name: string) => {
     log(chalk.cyan('WROTE') + ' ' + name);
