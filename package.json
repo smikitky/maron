@@ -7,14 +7,17 @@
     "maron": "./index.js"
   },
   "engines": {
-    "node": ">=14.0"
+    "node": ">=24.5"
   },
   "type": "module",
   "scripts": {
-    "test": "jest",
+    "test": "node --test src/*.test.ts",
     "prepublishOnly": "npm run build",
-    "build": "rimraf ./lib && tsc -p ./tsconfig.build.json",
-    "postbuild": "cp src/*.css src/*.html lib"
+    "build": "npm run build:js && npm run build:dts && npm run build:assets",
+    "build:js": "rimraf ./lib && tsup",
+    "build:dts": "tsc -p ./tsconfig.build.json",
+    "build:assets": "cp src/*.css src/*.html lib",
+    "clean": "rimraf ./lib"
   },
   "repository": {
     "type": "git",
@@ -60,16 +63,14 @@
     "@types/fs-extra": "^9.0.13",
     "@types/glob": "^7.2.0",
     "@types/indent-string": "^4.0.1",
-    "@types/jest": "^27.5.1",
     "@types/js-yaml": "^4.0.5",
     "@types/koa": "^2.13.4",
     "@types/koa-static": "^4.0.2",
     "@types/lodash": "^4.17.21",
     "@types/markdown-it": "^12.2.3",
     "@types/node": "^24.10.2",
-    "jest": "^28.1.0",
+    "tsup": "^8.2.4",
     "rimraf": "^6.1.2",
-    "ts-jest": "^28.0.3",
     "typescript": "^5.9.3"
   }
 }

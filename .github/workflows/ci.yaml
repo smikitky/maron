@@ -1,16 +1,30 @@
-name: Node CI
+name: CI
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 12.x
-      - name: npm install, build, and test
-        run: |
-          npm ci
-          npm test
+          node-version: 24.x
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint (tsc)
+        run: npm run build:dts
+
+      - name: Build
+        run: npm run build:js
+
+      - name: Test
+        run: npm test

@@ -5,9 +5,9 @@
     "esModuleInterop": true,
     "moduleResolution": "nodenext",
     "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "strict": true,
-    "declaration": true,
-    "outDir": "./lib"
   },
   "include": ["src/**/*"]
 }

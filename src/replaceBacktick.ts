@@ -1,10 +1,10 @@
 import * as cheerio from 'cheerio';
 import Handlebars from 'handlebars';
 import MarkdownIt from 'markdown-it';
-import formatReference from './formatReference.js';
-import formatTag from './formatTag.js';
-import { type Reporter } from './reporter.js';
-import type { CaptionStyle, FigureEntry, MaRonContext, TableEntry } from './types.js';
+import formatReference from './formatReference.ts';
+import formatTag from './formatTag.ts';
+import { type Reporter } from './reporter.ts';
+import type { CaptionStyle, FigureEntry, MaRonContext, TableEntry } from './types.ts';
 
 /**
  * Provides a custom markdown-it plug-in

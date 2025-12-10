@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { type Issue } from './types.js';
+import { type Issue } from './types.ts';
 
 const parseIssue = (str: string) => {
   const match = str

@@ -11,21 +11,22 @@ import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
 import { promisify } from 'util';
-import convertImage from './convertImage.js';
-import defaultStyle from './defaultStyle.js';
-import parseAuthors from './parseAuthors.js';
-import parseIssue from './parseIssue.js';
-import readFileIfExists from './readFileIfExists.js';
-import replaceBacktick from './replaceBacktick.js';
-import { type Reporter } from './reporter.js';
+import convertImage from './convertImage.ts';
+import defaultStyle from './defaultStyle.ts';
+import parseAuthors from './parseAuthors.ts';
+import parseIssue from './parseIssue.ts';
+import readFileIfExists from './readFileIfExists.ts';
+import replaceBacktick from './replaceBacktick.ts';
+import { type Reporter } from './reporter.ts';
 import type {
   FigureEntry,
   MainOptions,
   MaRonContext,
   ReferenceEntry
-} from './types.js';
+} from './types.ts';
 
 const glob = promisify(_glob);
+const __dirname = import.meta.dirname;
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })

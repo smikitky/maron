@@ -1,27 +1,31 @@
-import { authorList, formatPages } from './formatReference.js';
+import assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
+import { authorList, formatPages } from './formatReference.ts';
 
 describe('authorList', () => {
   test('basic', () => {
-    expect(authorList(['J Doe', 'A Smith'])).toBe('J Doe, A Smith');
-    expect(authorList(['J Doe', 'A Smith'], { max: 1 })).toBe('J Doe et al');
-    expect(authorList(['J Doe', 'A Smith'], { max: 2 })).toBe('J Doe, A Smith');
-    expect(authorList(['J Doe', 'A Smith'], { max: 2, truncateTo: 1 })).toBe(
+    assert.equal(authorList(['J Doe', 'A Smith']), 'J Doe, A Smith');
+    assert.equal(authorList(['J Doe', 'A Smith'], { max: 1 }), 'J Doe et al');
+    assert.equal(authorList(['J Doe', 'A Smith'], { max: 2 }), 'J Doe, A Smith');
+    assert.equal(
+      authorList(['J Doe', 'A Smith'], { max: 2, truncateTo: 1 }),
       'J Doe, A Smith'
     );
-    expect(
-      authorList(['J Doe', 'A Smith', 'B White'], { max: 2, truncateTo: 1 })
-    ).toBe('J Doe et al');
+    assert.equal(
+      authorList(['J Doe', 'A Smith', 'B White'], { max: 2, truncateTo: 1 }),
+      'J Doe et al'
+    );
   });
 });
 
 describe('formatPages', () => {
   test('basic', () => {
-    expect(formatPages([1, 10])).toBe('1-10');
-    expect(formatPages([8, 8])).toBe('8');
-    expect(formatPages([1, 10], { compact: true })).toBe('1-10');
-    expect(formatPages([15, 25], { compact: true })).toBe('15-25');
-    expect(formatPages([100, 110], { compact: true })).toBe('100-10');
-    expect(formatPages([980, 1001], { compact: true })).toBe('980-1001');
-    expect(formatPages('g1028', { compact: true })).toBe('g1028');
+    assert.equal(formatPages([1, 10]), '1-10');
+    assert.equal(formatPages([8, 8]), '8');
+    assert.equal(formatPages([1, 10], { compact: true }), '1-10');
+    assert.equal(formatPages([15, 25], { compact: true }), '15-25');
+    assert.equal(formatPages([100, 110], { compact: true }), '100-10');
+    assert.equal(formatPages([980, 1001], { compact: true }), '980-1001');
+    assert.equal(formatPages('g1028', { compact: true }), 'g1028');
   });
 });

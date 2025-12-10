@@ -1,23 +1,28 @@
-import formatTag from './formatTag.js';
+import assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 
-test('basic', () => {
-  expect(formatTag([1])).toBe('1');
-  expect(formatTag([1, 2])).toBe('1,2');
-  expect(formatTag([1, 2, 3])).toBe('1-3');
-  expect(formatTag([1, 3, 4, 6, 7, 8])).toBe('1,3,4,6-8');
-});
+import formatTag from './formatTag.ts';
 
-test('duplicate', () => {
-  expect(formatTag([5, 5, 7, 8, 8])).toBe('5,7,8');
-});
+describe('formatTag', () => {
+  test('basic', () => {
+    assert.equal(formatTag([1]), '1');
+    assert.equal(formatTag([1, 2]), '1,2');
+    assert.equal(formatTag([1, 2, 3]), '1-3');
+    assert.equal(formatTag([1, 3, 4, 6, 7, 8]), '1,3,4,6-8');
+  });
 
-test('unordered', () => {
-  expect(formatTag([3, 1, 5, 2, 4])).toBe('1-5');
-});
+  test('duplicate', () => {
+    assert.equal(formatTag([5, 5, 7, 8, 8]), '5,7,8');
+  });
 
-test('errors', () => {
-  expect(() => formatTag([0])).toThrow(TypeError);
-  expect(() => formatTag([1.5])).toThrow(TypeError);
-  // @ts-expect-error
-  expect(() => formatTag('foo')).toThrow(TypeError);
+  test('unordered', () => {
+    assert.equal(formatTag([3, 1, 5, 2, 4]), '1-5');
+  });
+
+  test('errors', () => {
+    assert.throws(() => formatTag([0]), TypeError);
+    assert.throws(() => formatTag([1.5]), TypeError);
+    // @ts-expect-error
+    assert.throws(() => formatTag('foo'), TypeError);
+  });
 });

@@ -1,10 +1,15 @@
-import parseAuthors from './parseAuthors.js';
+import assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
 
-test('parseAuthors', () => {
-  expect(parseAuthors('J Doe, T Yamada')).toEqual(['J Doe', 'T Yamada']);
-  expect(parseAuthors('J Doe, T Yamada, et al')).toEqual([
-    'J Doe',
-    'T Yamada',
-    'ET_AL'
-  ]);
+import parseAuthors from './parseAuthors.ts';
+
+describe('parseAuthors', () => {
+  test('basic', () => {
+    assert.deepEqual(parseAuthors('J Doe, T Yamada'), ['J Doe', 'T Yamada']);
+    assert.deepEqual(parseAuthors('J Doe, T Yamada, et al'), [
+      'J Doe',
+      'T Yamada',
+      'ET_AL'
+    ]);
+  });
 });
