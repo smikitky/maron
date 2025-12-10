@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 interface FormatTagOptions {
   itemSep?: string;
   hyphen?: string;
@@ -24,7 +22,7 @@ const formatTag = (arr: number[], options: FormatTagOptions = {}) => {
   ) {
     throw new TypeError('Input must be an array of positive integers');
   }
-  arr = _.uniq(arr).sort((a, b) => a - b);
+  arr = Array.from(new Set(arr)).sort((a, b) => a - b);
 
   const flush = () => {
     if (result) result += itemSep;

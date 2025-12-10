@@ -2,7 +2,6 @@ import chokidar from 'chokidar';
 import dashdash from 'dashdash';
 import { EventEmitter } from 'events';
 import fs from 'fs-extra';
-import _ from 'lodash';
 import path from 'path';
 import createReporter from './reporter.ts';
 import run from './run.ts';
@@ -71,6 +70,20 @@ const main = async () => {
   const start = () => run(options.src, options.out, options, reporter);
   await start();
 
+  const debounce = <T extends (...args: any[]) => void>(
+    fn: T,
+    wait = 300
+  ) => {
+    let timeout: NodeJS.Timeout | null = null;
+    return (...args: Parameters<T>) => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        timeout = null;
+        fn(...args);
+      }, wait);
+    };
+  };
+
   let notify = new EventEmitter();
   if (options.serve) {
     serve(options.out, notify);
@@ -79,7 +92,7 @@ const main = async () => {
   if (options.watch || options.serve) {
     let busy = false;
     console.log('Watching source and reference files...');
-    const handler = _.debounce(() => {
+    const handler = debounce(() => {
       if (busy) return;
       busy = true;
       if (options.clear) console.clear();

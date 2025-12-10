@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import _glob from 'glob';
 import Handlebars from 'handlebars';
 import yaml from 'js-yaml';
-import _ from 'lodash';
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import mdInclude from 'markdown-it-include';
@@ -222,7 +221,12 @@ const createContext = async (
     if (typeof data !== 'object') {
       throw new Error('Root of references.yaml must be an object.');
     }
-    references = _.mapValues(data, parseReference);
+    references = Object.fromEntries(
+      Object.entries(data as Record<string, unknown>).map(([key, value]) => [
+        key,
+        parseReference(value)
+      ])
+    );
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   }
 

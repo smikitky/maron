@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { type Issue } from './types.ts';
 
 const parseIssue = (str: string) => {
