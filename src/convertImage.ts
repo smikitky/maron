@@ -1,27 +1,21 @@
 import * as cp from 'node:child_process';
-import concat from 'concat-stream';
+import { buffer } from 'node:stream/consumers';
 import { type Readable } from 'node:stream';
 
 const exec = async (command: string, args: string[], stdin: Readable) => {
-  return new Promise<Buffer>((resolve, reject) => {
-    const process = cp.spawn(command, args);
-    stdin.pipe(process.stdin);
-    let stdout: Buffer, stderr: Buffer;
-    const catout = concat(buffer => (stdout = buffer));
-    const caterr = concat(buffer => (stderr = buffer));
-    process.stdout.pipe(catout);
-    process.stderr.pipe(caterr);
-    process.on('close', code => {
-      // if (stderr) console.error(stderr);
-      if (code === 0) resolve(stdout);
-      else
-        reject(
-          new Error(
-            'Exited with non-zero status code\n' + stderr.toString('utf8')
-          )
-        );
-    });
-  });
+  const process = cp.spawn(command, args);
+  stdin.pipe(process.stdin);
+  const [stdout, stderr, code] = await Promise.all([
+    buffer(process.stdout),
+    buffer(process.stderr),
+    new Promise<number>(resolve => process.on('close', resolve))
+  ]);
+
+  if (code === 0) return stdout;
+
+  throw new Error(
+    'Exited with non-zero status code\n' + stderr.toString('utf8')
+  );
 };
 
 interface ConvertImageOptions {
