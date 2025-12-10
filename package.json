@@ -14,10 +14,9 @@
     "test": "node --test src/*.test.ts",
     "prepublishOnly": "npm run build",
     "build": "npm run build:js && npm run build:dts && npm run build:assets",
-    "build:js": "rimraf ./lib && tsup",
+    "build:js": "tsup",
     "build:dts": "tsgo -p ./tsconfig.build.json",
-    "build:assets": "cp src/*.css src/*.html lib",
-    "clean": "rimraf ./lib"
+    "build:assets": "cp src/*.css src/*.html lib"
   },
   "repository": {
     "type": "git",
@@ -58,7 +57,6 @@
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.10.2",
     "@typescript/native-preview": "^7.0.0-dev.20251210.1",
-    "rimraf": "^6.1.2",
     "tsup": "^8.2.4",
     "typescript": "^5.9.3"
   }
