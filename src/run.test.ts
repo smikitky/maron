@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, test } from 'node:test';
 import path from 'node:path';
 
-import fs from 'fs-extra';
+import { promises as fs } from 'node:fs';
 
 import run from './run.ts';
 
@@ -33,12 +33,13 @@ describe('run', () => {
   const outDir = path.resolve(__dirname, '..', 'test-out');
 
   afterEach(async () => {
-    await fs.remove(outDir);
+    await fs.rm(outDir, { recursive: true, force: true });
   });
 
   test('Run using init-template', async () => {
     const { reporter, calls } = createMockReporter();
-    await fs.emptyDir(outDir);
+    await fs.rm(outDir, { recursive: true, force: true });
+    await fs.mkdir(outDir, { recursive: true });
     await run(
       srcDir,
       outDir,

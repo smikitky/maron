@@ -1,7 +1,7 @@
 import chokidar from 'chokidar';
 import dashdash from 'dashdash';
 import { EventEmitter } from 'events';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import path from 'path';
 import createReporter from './reporter.ts';
 import run from './run.ts';
@@ -54,9 +54,10 @@ const main = async () => {
     reporter.section('Initializing a New MaRon Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
-      await fs.ensureDir(src);
-      await fs.copy(path.resolve(__dirname, '..', 'init-template'), src, {
-        overwrite: false,
+      await fs.mkdir(src, { recursive: true });
+      await fs.cp(path.resolve(__dirname, '..', 'init-template'), src, {
+        recursive: true,
+        force: false,
         errorOnExist: true
       });
       reporter.log(`Created an empty project under ${src}.`);

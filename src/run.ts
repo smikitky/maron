@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import extend from 'extend';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import _glob from 'glob';
 import Handlebars from 'handlebars';
 import yaml from 'js-yaml';
@@ -158,7 +159,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
       reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
 
       const tiffOut = path.join(outDir, `fig-${index}${postfix}.tiff`);
-      const tiffOutBuf = await convertImage(fs.createReadStream(inFile), {
+      const tiffOutBuf = await convertImage(createReadStream(inFile), {
         resolution: subFigure.resolution || figure.resolution,
         outType: 'tiff'
       });
@@ -166,7 +167,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
       reporter.output(tiffOut);
 
       const pngOut = path.join(outDir, `fig-${index}${postfix}.png`);
-      const pngOutBuf = await convertImage(fs.createReadStream(inFile), {
+      const pngOutBuf = await convertImage(createReadStream(inFile), {
         resolution:
           subFigure.webResolution ||
           subFigure.resolution ||
@@ -281,7 +282,7 @@ const run = async (
   reporter: Reporter
 ) => {
   try {
-    await fs.ensureDir(outDir);
+    await fs.mkdir(outDir, { recursive: true });
     const ctx = await createContext(sourceDir, outDir, options, reporter);
     await generateHtml(ctx, reporter);
     await convertImages(ctx, reporter);
