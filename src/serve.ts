@@ -1,8 +1,8 @@
 import Koa from 'koa';
 import koaStatic from 'koa-static';
 import getPort from 'get-port';
-import { PassThrough } from 'stream';
-import { EventEmitter } from 'events';
+import { PassThrough } from 'node:stream';
+import { EventEmitter } from 'node:events';
 
 const notifyUpdates = (notify: EventEmitter): Koa.Middleware => {
   return async (ctx, next) => {

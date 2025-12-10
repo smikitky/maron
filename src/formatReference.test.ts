@@ -1,4 +1,4 @@
-import { authorList, formatPages } from './formatReference';
+import { authorList, formatPages } from './formatReference.js';
 
 describe('authorList', () => {
   test('basic', () => {

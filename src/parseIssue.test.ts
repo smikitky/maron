@@ -1,4 +1,4 @@
-import parseIssue from './parseIssue';
+import parseIssue from './parseIssue.js';
 
 test('parse', () => {
   expect(parseIssue('2015 Aug;7(3): 107-15')).toStrictEqual({

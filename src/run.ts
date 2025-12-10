@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import extend from 'extend';
 import fs from 'fs-extra';
 import _glob from 'glob';
@@ -11,19 +11,19 @@ import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
 import { promisify } from 'util';
-import convertImage from './convertImage';
-import defaultStyle from './defaultStyle';
-import parseAuthors from './parseAuthors';
-import parseIssue from './parseIssue';
-import readFileIfExists from './readFileIfExists';
-import replaceBacktick from './replaceBacktick';
-import { Reporter } from './reporter';
-import {
+import convertImage from './convertImage.js';
+import defaultStyle from './defaultStyle.js';
+import parseAuthors from './parseAuthors.js';
+import parseIssue from './parseIssue.js';
+import readFileIfExists from './readFileIfExists.js';
+import replaceBacktick from './replaceBacktick.js';
+import { type Reporter } from './reporter.js';
+import type {
   FigureEntry,
   MainOptions,
   MaRonContext,
   ReferenceEntry
-} from './types';
+} from './types.js';
 
 const glob = promisify(_glob);
 
@@ -52,7 +52,7 @@ const generateHtml = async (ctx: MaRonContext, reporter: Reporter) => {
   reporter.log('Generated HTML.');
 
   // Post-procee HTML (auto links, etc)
-  const $ = cheerio.load(result, { normalizeWhitespace: true });
+  const $ = cheerio.load(result);
   $('.ref').each((i, elem) => {
     const index = $(elem).html();
     const ref = $(`#ref-${index}`);

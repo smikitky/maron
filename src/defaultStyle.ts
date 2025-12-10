@@ -1,4 +1,4 @@
-import { MaRonStyle } from './types';
+import { type MaRonStyle } from './types.js';
 
 const defaultStyle: MaRonStyle = {
   reference: {

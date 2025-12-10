@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars';
 import capitalizeTitle from 'capitalize-title';
-import { ReferenceEntry } from './types';
+import { type ReferenceEntry } from './types.js';
 
 interface AuthorListOptions {
   max?: number;

@@ -4,10 +4,10 @@ import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
-import createReporter from './reporter';
-import run from './run';
-import serve from './serve';
-import { MainOptions } from './types';
+import createReporter from './reporter.js';
+import run from './run.js';
+import serve from './serve.js';
+import { type MainOptions } from './types.js';
 
 // const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

@@ -1,6 +1,6 @@
-import cp from 'child_process';
+import * as cp from 'node:child_process';
 import concat from 'concat-stream';
-import { Readable } from 'stream';
+import { type Readable } from 'node:stream';
 
 const exec = async (command: string, args: string[], stdin: Readable) => {
   return new Promise<Buffer>((resolve, reject) => {

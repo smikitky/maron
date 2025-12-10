@@ -1,10 +1,10 @@
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import Handlebars from 'handlebars';
 import MarkdownIt from 'markdown-it';
-import formatReference from './formatReference';
-import formatTag from './formatTag';
-import { Reporter } from './reporter';
-import { CaptionStyle, FigureEntry, MaRonContext, TableEntry } from './types';
+import formatReference from './formatReference.js';
+import formatTag from './formatTag.js';
+import { type Reporter } from './reporter.js';
+import type { CaptionStyle, FigureEntry, MaRonContext, TableEntry } from './types.js';
 
 /**
  * Provides a custom markdown-it plug-in
@@ -126,10 +126,10 @@ const replaceBacktick = () => {
       name: 'figure' | 'table',
       className: string,
       tagToContent: (
-        $: cheerio.Root,
+        $: cheerio.CheerioAPI,
         tag: string,
         index: number
-      ) => cheerio.Cheerio,
+      ) => cheerio.Cheerio<any>,
       style: CaptionStyle
     ) => {
       const $ = cheerio.load('');

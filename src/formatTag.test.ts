@@ -1,4 +1,4 @@
-import formatTag from './formatTag';
+import formatTag from './formatTag.js';
 
 test('basic', () => {
   expect(formatTag([1])).toBe('1');

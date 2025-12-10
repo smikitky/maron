@@ -1,6 +1,6 @@
 import MarkdownIt from 'markdown-it';
-import replaceBacktick from './replaceBacktick';
-import defaultStyle from './defaultStyle';
+import replaceBacktick from './replaceBacktick.js';
+import defaultStyle from './defaultStyle.js';
 import cheerio from 'cheerio';
 
 describe('replaceBacktick', () => {

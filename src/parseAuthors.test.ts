@@ -1,4 +1,4 @@
-import parseAuthors from './parseAuthors';
+import parseAuthors from './parseAuthors.js';
 
 test('parseAuthors', () => {
   expect(parseAuthors('J Doe, T Yamada')).toEqual(['J Doe', 'T Yamada']);
