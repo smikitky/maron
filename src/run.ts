@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import extend from 'extend';
 import fs from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
-import _glob from 'glob';
+import { glob } from 'glob';
 import Handlebars from 'handlebars';
 import yaml from 'js-yaml';
 import MarkdownIt from 'markdown-it';
@@ -10,7 +10,6 @@ import attrs from 'markdown-it-attrs';
 import mdInclude from 'markdown-it-include';
 import namedHeadings from 'markdown-it-named-headings';
 import path from 'path';
-import { promisify } from 'util';
 import convertImage from './convertImage.ts';
 import defaultStyle from './defaultStyle.ts';
 import parseAuthors from './parseAuthors.ts';
@@ -25,7 +24,6 @@ import type {
   ReferenceEntry
 } from './types.ts';
 
-const glob = promisify(_glob);
 const __dirname = import.meta.dirname;
 
 const backticks = replaceBacktick();
