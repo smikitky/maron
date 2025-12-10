@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 
 const indent = (text: string) => {
   const prefix = '  ';
@@ -19,22 +19,22 @@ export interface Reporter {
 
 const createReporter = (verbose = false): Reporter => {
   const section = (title: string) => {
-    console.log('\n' + chalk.bold.underline(title));
+    console.log('\n' + pc.bold(pc.underline(title)));
   };
   const log = (data: string) => {
     console.log(indent(data));
   };
   const output = (name: string) => {
-    log(chalk.cyan('WROTE') + ' ' + name);
+    log(pc.cyan('WROTE') + ' ' + name);
   };
   const info = (data: string) => {
     if (verbose) log(data);
   };
   const warn = (data: string) => {
-    log(chalk.black.bgYellow('WARN') + ' ' + data);
+    log(pc.bgYellow(pc.black('WARN')) + ' ' + data);
   };
   const error = (data: string) => {
-    log(chalk.black.bgRed('ERR') + ' ' + data);
+    log(pc.bgRed(pc.black('ERR')) + ' ' + data);
   };
   return { section, log, output, info, warn, error };
 };
