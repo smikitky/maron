@@ -1,45 +1,37 @@
-import Koa from 'koa';
-import koaStatic from 'koa-static';
+import { Hono } from 'hono';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { streamSSE } from 'hono/streaming';
 import getPort from 'get-port';
-import { PassThrough } from 'node:stream';
 import { EventEmitter } from 'node:events';
+import { serve } from '@hono/node-server';
 
-const notifyUpdates = (notify: EventEmitter): Koa.Middleware => {
-  return async (ctx, next) => {
-    const stream = new PassThrough();
-    const handler = () => {
-      stream.write('event: change\ndata: change\n\n');
-    };
-    notify.on('change', handler);
-    const timerId = setInterval(() => stream.write(':\n\n'), 1500);
-    const clear = () => {
-      notify.off('change', handler);
-      clearInterval(timerId);
-    };
-    stream.on('close', clear);
-    stream.on('error', clear);
-    ctx.type = 'text/event-stream';
-    ctx.body = stream;
-  };
-};
+const serveApp = async (outDir: string, notify: EventEmitter) => {
+  const app = new Hono();
 
-const serve = async (outDir: string, notify: EventEmitter) => {
-  const app = new Koa();
-  const notifyMiddleware = notifyUpdates(notify);
-  app.use(async (ctx, next) => {
-    if (ctx.path === '/updates') {
-      await notifyMiddleware(ctx, next);
-    } else {
-      await next();
-    }
-  });
-  app.use(koaStatic(outDir));
+  app.get('/updates', c =>
+    streamSSE(c, async stream => {
+      const handler = () => stream.writeSSE({ event: 'change', data: 'change' });
+      notify.on('change', handler);
+      const timerId = setInterval(() => stream.writeSSE({ data: '' }), 1500);
+      stream.onAbort(() => {
+        notify.off('change', handler);
+        clearInterval(timerId);
+      });
+    })
+  );
+
+  app.use(
+    '/*',
+    serveStatic({
+      root: outDir
+    })
+  );
 
   const port = await getPort({ port: [3000, 3001, 3002, 3003, 3004, 3005] });
-  app.listen({ port });
+  serve({ fetch: app.fetch, port });
   console.log(`Serving on http://127.0.0.1:${port}/`);
 
   return notify;
 };
 
-export default serve;
+export default serveApp;
