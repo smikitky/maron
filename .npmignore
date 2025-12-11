@@ -7,3 +7,5 @@
 /.vscode
 /tsconfig*
 /jest.config.js
+tsup.config.ts
+tsconfig*
