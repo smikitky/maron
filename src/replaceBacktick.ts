@@ -64,7 +64,7 @@ const replaceBacktick = () => {
           /(\d+)/g,
           '<span class="ref">$1</span>'
         )
-      });
+      }).trim();
       addRawHtmlToken(html);
     };
 
