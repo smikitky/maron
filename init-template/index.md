@@ -7,6 +7,10 @@ John Doe, Jane, Doe, An Onymous
 
 This is the first sentence `ref:quantum`.
 
+See also the report `ref:shiny` and a PII-only sample `ref:pii-case`.
+
+Supplement style issues look like `ref:suppl-issue`.
+
 Fig. `fig:rabbit` shows a rabbit.
 
 See Table `tab:dilemma` for an example table.

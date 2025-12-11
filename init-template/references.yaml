@@ -1,7 +1,27 @@
-# References List
+# References List (Use NLM format for iessues)
 quantum:
   authors: Aspelmeyer M
   title: 'Quantum tomography: Measured measurement'
   journal: Nature Physics
   issue: '2009 Jan; 5(1): 11-2'
   doi: 10.1038/nphys1170
+
+shiny:
+  authors: Sakuragi M, Kazano H, Hachimiya M
+  title: Auditing multimodal language models for fictional radiology certification exams
+  journal: Imaginary Radiology
+  issue: '2025 Sep 12'
+  note: Epub ahead of print.
+  doi: 10.1234/fict.025-01861
+
+pii-case:
+  authors: Foo B, Bar C
+  title: Example of PII-only issue string
+  journal: Sample Journal
+  issue: '2025:S1076-6332(25)01037-2'
+
+suppl-issue:
+  authors: Alice A, Bob B
+  title: Supplement issue formatting example
+  journal: Supplement Studies
+  issue: '2010;30(Suppl 1):25-30'

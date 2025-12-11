@@ -31,10 +31,12 @@ export interface MaRonStyle {
 
 export interface Issue {
   year: string;
-  month: string;
-  volume: string;
-  issue: string;
-  pages: string | [start: number, end: number];
+  month: string | undefined;
+  day: string | undefined;
+  volume: string | undefined;
+  issue: string | undefined;
+  pages: string | [start: number, end: number] | undefined;
+  articleId?: string | undefined;
 }
 
 export interface ReferenceEntry {
