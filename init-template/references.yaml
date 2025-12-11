@@ -25,3 +25,7 @@ suppl-issue:
   title: Supplement issue formatting example
   journal: Supplement Studies
   issue: '2010;30(Suppl 1):25-30'
+
+web-resource:
+  literal: >
+    Official template documentation. https://example.com/maron-template. Accessed 2025-01-01.

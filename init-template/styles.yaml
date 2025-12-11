@@ -3,7 +3,22 @@
 
 reference:
   format: >
-    {{authorList authors max=3}}. <b>{{capitalize title}}</b>. {{journal}} {{issue.year}}{{#if issue.month}} {{issue.month}}{{/if}}{{#if issue.day}} {{issue.day}}{{/if}}{{#if issue.articleId}}: {{issue.articleId}}{{else}}{{#if issue.volume}};{{issue.volume}}{{/if}}{{#if issue.issue}}({{issue.issue}}){{/if}}{{#if issue.pages}}{{#if issue.volume}}: {{else}}; {{/if}}{{{pages issue.pages compact=true delim='&ndash;'}}}{{/if}}{{/if}}{{#if note}} {{note}}{{/if}}.
+    {{#if literal}}
+      {{{literal}}}
+    {{else}}
+      {{authorList authors max=3}}.
+      <b>{{capitalize title}}</b>.
+      {{journal}}.
+      {{issue.year}}{{#if issue.month}} {{issue.month}}{{/if}}{{#if issue.day}} {{issue.day}}{{/if}}
+      {{~#if issue.articleId}}:{{issue.articleId}}{{~else}}
+      {{~#if issue.volume}};{{issue.volume}}{{/if}}
+      {{~#if issue.issue}}({{issue.issue}}){{/if}}
+      {{~#if issue.pages}}
+        {{~#if issue.volume}}:{{else}};{{/if}}{{{pages issue.pages compact=true delim='&ndash;'}}}
+      {{~/if}}
+      {{~/if}}.
+      {{#if note}} {{note}}.{{/if}}
+    {{/if}}
 citation:
   format: >
     [{{{items}}}]
