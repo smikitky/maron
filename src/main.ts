@@ -26,13 +26,15 @@ const main = async () => {
     .option('-h, --help', 'Prints this message');
 
   const { options } = cli.parse();
+  const rawArgs = cli.rawArgs ?? [];
+  const noLink = options.link === false || rawArgs.includes('-n') || rawArgs.includes('--no-link');
   const parsedOptions: MainOptions = {
     init: options.init,
     src: options.src,
     out: options.out,
     watch: options.watch,
     verbose: options.verbose,
-    no_link: options.noLink,
+    no_link: noLink,
     text_only: options.textOnly,
     clear: options.clear,
     serve: options.serve,
