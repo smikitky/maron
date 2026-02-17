@@ -102,7 +102,11 @@ const main = async () => {
         notify.emit('change');
       });
     }, 300);
-    chokidar.watch(parsedOptions.src).on('change', handler);
+    chokidar
+      .watch(parsedOptions.src)
+      .on('add', handler)
+      .on('change', handler)
+      .on('unlink', handler);
   }
 };
 
