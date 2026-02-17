@@ -25,6 +25,7 @@ import type {
 } from './types.ts';
 
 const __dirname = import.meta.dirname;
+const imageBuildCache = new Map<string, string>();
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
@@ -134,6 +135,40 @@ const findFileMatchingTag = async (
   return files[0];
 };
 
+const createImageBuildSignature = (
+  inFile: string,
+  mtimeMs: number,
+  resolution: number,
+  outType: 'tiff' | 'png'
+) => `${inFile}|${mtimeMs}|${resolution}|${outType}`;
+
+const fileExists = async (file: string) => {
+  try {
+    await fs.stat(file);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const shouldConvertImageOutput = async (
+  outFile: string,
+  signature: string
+) => {
+  const cached = imageBuildCache.get(outFile);
+  if (cached !== signature) return true;
+  const exists = await fileExists(outFile);
+  return !exists;
+};
+
+const pruneImageBuildCache = (usedOutputs: Set<string>) => {
+  for (const outFile of imageBuildCache.keys()) {
+    if (!usedOutputs.has(outFile)) {
+      imageBuildCache.delete(outFile);
+    }
+  }
+};
+
 const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
   const { sourceDir, outDir, figures, figTagMap, options } = ctx;
   reporter.section('Converting Images...');
@@ -141,6 +176,9 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
     reporter.log('Skip');
     return;
   }
+  let convertedCount = 0;
+  let skippedCount = 0;
+  const usedOutputs = new Set<string>();
   for (const [tag, index] of figTagMap.entries()) {
     const figure = figures[tag];
     const subFigures = Array.isArray(figure.subFigures)
@@ -155,30 +193,62 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
         ['jpg', 'png', 'pdf']
       );
       reporter.info(`fig #${index} => ${path.relative(sourceDir, inFile)}`);
+      const { mtimeMs } = await fs.stat(inFile);
 
       const tiffOut = path.join(outDir, `fig-${index}${postfix}.tiff`);
-      const tiffOutBuf = await convertImage(createReadStream(inFile), {
-        resolution: subFigure.resolution || figure.resolution,
-        outType: 'tiff'
-      });
-      await fs.writeFile(tiffOut, tiffOutBuf);
-      reporter.output(tiffOut);
+      const tiffResolution = subFigure.resolution || figure.resolution || 600;
+      const tiffSignature = createImageBuildSignature(
+        inFile,
+        mtimeMs,
+        tiffResolution,
+        'tiff'
+      );
+      usedOutputs.add(tiffOut);
+      if (await shouldConvertImageOutput(tiffOut, tiffSignature)) {
+        const tiffOutBuf = await convertImage(createReadStream(inFile), {
+          resolution: tiffResolution,
+          outType: 'tiff'
+        });
+        await fs.writeFile(tiffOut, tiffOutBuf);
+        reporter.output(tiffOut);
+        convertedCount++;
+      } else {
+        skippedCount++;
+      }
+      imageBuildCache.set(tiffOut, tiffSignature);
 
       const pngOut = path.join(outDir, `fig-${index}${postfix}.png`);
-      const pngOutBuf = await convertImage(createReadStream(inFile), {
-        resolution:
-          subFigure.webResolution ||
-          subFigure.resolution ||
-          figure.webResolution ||
-          figure.resolution ||
-          72,
-        outType: 'png'
-      });
-      await fs.writeFile(pngOut, pngOutBuf);
-      reporter.output(pngOut);
+      const pngResolution =
+        subFigure.webResolution ||
+        subFigure.resolution ||
+        figure.webResolution ||
+        figure.resolution ||
+        72;
+      const pngSignature = createImageBuildSignature(
+        inFile,
+        mtimeMs,
+        pngResolution,
+        'png'
+      );
+      usedOutputs.add(pngOut);
+      if (await shouldConvertImageOutput(pngOut, pngSignature)) {
+        const pngOutBuf = await convertImage(createReadStream(inFile), {
+          resolution: pngResolution,
+          outType: 'png'
+        });
+        await fs.writeFile(pngOut, pngOutBuf);
+        reporter.output(pngOut);
+        convertedCount++;
+      } else {
+        skippedCount++;
+      }
+      imageBuildCache.set(pngOut, pngSignature);
     }
   }
-  reporter.log(`Converted ${figTagMap.size} source image(s).`);
+  pruneImageBuildCache(usedOutputs);
+  reporter.log(
+    `Converted ${convertedCount} output image(s), skipped ${skippedCount}.`
+  );
 };
 
 const parseReference = (ref: any): ReferenceEntry => {
@@ -291,3 +361,10 @@ const run = async (
 };
 
 export default run;
+
+export const __testing = {
+  createImageBuildSignature,
+  shouldConvertImageOutput,
+  pruneImageBuildCache,
+  imageBuildCache
+};
