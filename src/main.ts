@@ -75,7 +75,17 @@ const main = async () => {
   const start = async () => {
     for (const entry of entries) {
       reporter.section(`Building source "${entry.name}"...`);
-      await run(entry.sourceDir, entry.outDir, parsedOptions, reporter);
+      const entryOptions: MainOptions = {
+        ...parsedOptions,
+        dev_nav: parsedOptions.serve
+          ? entries.map(item => ({
+              name: item.name,
+              path: item.routePath,
+              isCurrent: item.name === entry.name
+            }))
+          : undefined
+      };
+      await run(entry.sourceDir, entry.outDir, entryOptions, reporter);
     }
   };
   await start();

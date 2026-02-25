@@ -55,7 +55,10 @@ const generateHtml = async (ctx: MaRonContext, reporter: Reporter) => {
   const result = Handlebars.compile(template)({
     html,
     useLink: !ctx.options.no_link,
-    serve: !!ctx.options.serve
+    serve: !!ctx.options.serve,
+    devNavJson: JSON.stringify(
+      ctx.options.serve ? (ctx.options.dev_nav ?? []) : []
+    )
   });
   reporter.log('Generated HTML.');
 
@@ -123,6 +126,17 @@ const generateCss = async (ctx: MaRonContext, reporter: Reporter) => {
   const cssFile = path.join(outDir, 'style.css');
   await fs.writeFile(cssFile, defaultCss + '\n\n' + customCss);
   reporter.output('style.css');
+};
+
+const generateDevAssets = async (ctx: MaRonContext, reporter: Reporter) => {
+  if (!ctx.options.serve) return;
+  const { outDir } = ctx;
+  const script = await fs.readFile(path.join(__dirname, 'maron-dev.js'), 'utf8');
+  const style = await fs.readFile(path.join(__dirname, 'maron-dev.css'), 'utf8');
+  await fs.writeFile(path.join(outDir, 'maron-dev.js'), script, 'utf8');
+  await fs.writeFile(path.join(outDir, 'maron-dev.css'), style, 'utf8');
+  reporter.output('maron-dev.js');
+  reporter.output('maron-dev.css');
 };
 
 const findFileMatchingTag = async (
@@ -382,6 +396,7 @@ const run = async (
     await fs.mkdir(outDir, { recursive: true });
     const ctx = await createContext(sourceDir, outDir, options, reporter);
     await generateHtml(ctx, reporter);
+    await generateDevAssets(ctx, reporter);
     await convertImages(ctx, reporter);
     await generateCss(ctx, reporter);
   } catch (err: any) {

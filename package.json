@@ -16,7 +16,7 @@
     "build": "npm run build:js && npm run build:dts && npm run build:assets",
     "build:js": "tsup",
     "build:dts": "tsgo -p ./tsconfig.build.json",
-    "build:assets": "cp src/*.css src/*.html lib"
+    "build:assets": "cp src/*.css src/*.html src/*.js lib"
   },
   "repository": {
     "type": "git",

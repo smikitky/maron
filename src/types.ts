@@ -7,6 +7,13 @@ export interface MainOptions {
   clear?: boolean;
   serve?: boolean;
   help?: boolean;
+  dev_nav?: DevNavItem[];
+}
+
+export interface DevNavItem {
+  name: string;
+  path: string;
+  isCurrent: boolean;
 }
 
 export interface MaronSourceConfig {

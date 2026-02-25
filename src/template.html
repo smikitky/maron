@@ -12,12 +12,8 @@
 </main>
 
 {{#if serve}}
-<script>
-  if (location.href.match(/^http/)) {
-    const eventSource = new EventSource('/updates');
-    eventSource.addEventListener('change', () =>  location.reload());
-  }
-</script>
+<script id="maron-dev-nav-data" type="application/json">{{{devNavJson}}}</script>
+<script src="./maron-dev.js"></script>
 {{/if}}
 </body>
 </html>

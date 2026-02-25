@@ -49,5 +49,37 @@ describe('run', () => {
     assert.equal(calls.error.length, 0);
     assert.ok(calls.output.includes('index.html'));
     assert.ok(calls.output.includes('style.css'));
+    const html = await fs.readFile(path.join(outDir, 'index.html'), 'utf8');
+    assert.equal(html.includes('maron-dev-nav-data'), false);
+    await assert.rejects(() => fs.readFile(path.join(outDir, 'maron-dev.js'), 'utf8'));
+    await assert.rejects(() => fs.readFile(path.join(outDir, 'maron-dev.css'), 'utf8'));
+  });
+
+  test('renders dev floating nav in serve mode', async () => {
+    const { reporter } = createMockReporter();
+    await fs.rm(outDir, { recursive: true, force: true });
+    await fs.mkdir(outDir, { recursive: true });
+    await run(
+      srcDir,
+      outDir,
+      {
+        text_only: true,
+        serve: true,
+        dev_nav: [
+          { name: 'manuscript', path: '/', isCurrent: true },
+          { name: 'rebuttal', path: '/rebuttal', isCurrent: false }
+        ]
+      } as any,
+      reporter as any
+    );
+    const html = await fs.readFile(path.join(outDir, 'index.html'), 'utf8');
+    assert.ok(html.includes('id="maron-dev-nav-data"'));
+    assert.ok(html.includes('<script src="./maron-dev.js"></script>'));
+    assert.ok(html.includes('"path":"/rebuttal"'));
+    const devScript = await fs.readFile(path.join(outDir, 'maron-dev.js'), 'utf8');
+    assert.ok(devScript.includes("cssLink.href = './maron-dev.css'"));
+    assert.ok(devScript.includes("new EventSource('/updates')"));
+    const devCss = await fs.readFile(path.join(outDir, 'maron-dev.css'), 'utf8');
+    assert.ok(devCss.includes('.maron-dev-nav-current'));
   });
 });
