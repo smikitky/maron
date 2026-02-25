@@ -11,7 +11,6 @@ MaRon is a helper script for writing manuscripts in markdown.
 1. Install Node.js.
 
 1. Prepare ImageMagick (v6 or 7). You have several options.
-
    - Version 7 (the `magick` command) may not be available from apt. Instead, you can download the latest binary from the official site.
 
      ```
@@ -183,3 +182,22 @@ You can use the following Handlebars [helpers](https://handlebarsjs.com/guide/ex
 ### Custom HTML (`style.css`)
 
 Anything inside this CSS will be joined to the ron's default CSS rules.
+
+## Multiple Sources
+
+By default (without config), maron reads from `src/` and writes to `out/`.
+
+To build multiple sources, create `maron.config.js` in your project root.
+
+```js
+export default {
+  sources: {
+    manuscript: { src: 'src', main: true },
+    rebuttal: { src: 'src-rebuttal' }
+  }
+};
+```
+
+- In dev server mode, URLs correspond to paths under `out/`.
+- `main: true` source is generated under `out/` and served at `/`.
+- Other sources are generated under `out/<name>/` and served at `/<name>/`.

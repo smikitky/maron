@@ -3,6 +3,7 @@ import { cac } from 'cac';
 import { EventEmitter } from 'events';
 import fs from 'node:fs/promises';
 import path from 'path';
+import resolveSourceEntries from './config.ts';
 import createReporter from './reporter.ts';
 import run from './run.ts';
 import serve from './serve.ts';
@@ -15,8 +16,6 @@ const main = async () => {
 
   cli
     .option('--init', 'Initialize a new article.')
-    .option('--src <dir>', 'Source dir', { default: './src' })
-    .option('--out <dir>', 'Output dir', { default: './out' })
     .option('-w, --watch', 'Watch source files')
     .option('-v, --verbose', 'Print more info')
     .option('-n, --no-link', 'Disable links')
@@ -30,8 +29,6 @@ const main = async () => {
   const noLink = options.link === false || rawArgs.includes('-n') || rawArgs.includes('--no-link');
   const parsedOptions: MainOptions = {
     init: options.init,
-    src: options.src,
-    out: options.out,
     watch: options.watch,
     verbose: options.verbose,
     no_link: noLink,
@@ -49,7 +46,7 @@ const main = async () => {
   const reporter = createReporter(parsedOptions.verbose);
 
   if (parsedOptions.init) {
-    const { src } = parsedOptions;
+    const src = './src';
     reporter.section('Initializing a New MaRon Project...');
     reporter.log(`Setting up a new article under ${src}...`);
     try {
@@ -67,7 +64,20 @@ const main = async () => {
     return;
   }
 
-  const start = () => run(parsedOptions.src, parsedOptions.out, parsedOptions, reporter);
+  let entries: Awaited<ReturnType<typeof resolveSourceEntries>>;
+  try {
+    entries = await resolveSourceEntries();
+  } catch (err: any) {
+    reporter.error(err.message);
+    return;
+  }
+
+  const start = async () => {
+    for (const entry of entries) {
+      reporter.section(`Building source "${entry.name}"...`);
+      await run(entry.sourceDir, entry.outDir, parsedOptions, reporter);
+    }
+  };
   await start();
 
   const debounce = <T extends (...args: any[]) => void>(
@@ -84,26 +94,31 @@ const main = async () => {
     };
   };
 
-  let notify = new EventEmitter();
+  const notify = new EventEmitter();
   if (parsedOptions.serve) {
-    serve(parsedOptions.out, notify);
+    await serve(entries, notify);
   }
 
   if (parsedOptions.watch || parsedOptions.serve) {
     let busy = false;
+    const watchTargets = entries.map(entry => entry.sourceDir);
     console.log('Watching source and reference files...');
     const handler = debounce(() => {
       if (busy) return;
       busy = true;
       if (parsedOptions.clear) console.clear();
       console.log('Recompiling...');
-      start().then(() => {
-        busy = false;
-        notify.emit('change');
-      });
+      start()
+        .then(() => {
+          busy = false;
+          notify.emit('change');
+        })
+        .catch(() => {
+          busy = false;
+        });
     }, 300);
     chokidar
-      .watch(parsedOptions.src)
+      .watch(watchTargets)
       .on('add', handler)
       .on('change', handler)
       .on('unlink', handler);

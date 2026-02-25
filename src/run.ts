@@ -17,12 +17,20 @@ import parseIssue from './parseIssue.ts';
 import readFileIfExists from './readFileIfExists.ts';
 import replaceBacktick from './replaceBacktick.ts';
 import { type Reporter } from './reporter.ts';
+import {
+  figuresSchema,
+  formatZodError,
+  referencesSchema,
+  stylesSchema,
+  tablesSchema
+} from './schema.ts';
 import type {
   FigureEntry,
   MainOptions,
   MaRonContext,
   ReferenceEntry
 } from './types.ts';
+import type { ZodType } from 'zod';
 
 const __dirname = import.meta.dirname;
 const imageBuildCache = new Map<string, string>();
@@ -251,13 +259,32 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
   );
 };
 
-const parseReference = (ref: any): ReferenceEntry => {
+type ParsedReferenceInput = {
+  authors?: string | string[];
+  issue?: string | ReferenceEntry['issue'];
+  [key: string]: unknown;
+};
+
+const parseReference = (ref: ParsedReferenceInput): ReferenceEntry => {
   return {
     ...ref,
     authors:
       typeof ref.authors === 'string' ? parseAuthors(ref.authors) : ref.authors,
     issue: typeof ref.issue === 'string' ? parseIssue(ref.issue) : ref.issue
   };
+};
+
+const parseYamlWithSchema = <T>(
+  fileName: string,
+  rawText: string,
+  schema: ZodType<T>
+): T => {
+  const loaded = yaml.load(rawText);
+  const parsed = schema.safeParse(loaded);
+  if (!parsed.success) {
+    throw new Error(formatZodError(fileName, parsed.error));
+  }
+  return parsed.data;
 };
 
 /**
@@ -277,24 +304,26 @@ const createContext = async (
   const styleFileName = path.join(sourceDir, 'styles.yaml');
   const styleFile = await readFileIfExists(styleFileName);
   if (!styleFile) reporter.info('Style file not found. Using default styles.');
-  const customStyles = yaml.load(styleFile || '{}');
+  const customStyles = parseYamlWithSchema(
+    'styles.yaml',
+    styleFile || '{}',
+    stylesSchema
+  );
   const styles = extend(true, {}, defaultStyle, customStyles);
 
-  let references = {};
+  let references: MaRonContext['references'] = {};
   const referencesFileName = path.join(sourceDir, 'references.yaml');
   const referencesFile = await readFileIfExists(referencesFileName);
   if (!referencesFile) {
     reporter.warn('references.yaml not found.');
   } else {
-    const data = yaml.load(referencesFile);
-    if (typeof data !== 'object') {
-      throw new Error('Root of references.yaml must be an object.');
-    }
+    const data = parseYamlWithSchema(
+      'references.yaml',
+      referencesFile,
+      referencesSchema
+    );
     references = Object.fromEntries(
-      Object.entries(data as Record<string, unknown>).map(([key, value]) => [
-        key,
-        parseReference(value)
-      ])
+      Object.entries(data).map(([key, value]) => [key, parseReference(value)])
     );
     reporter.log(`Loaded ${Object.keys(references).length} reference items.`);
   }
@@ -305,7 +334,7 @@ const createContext = async (
   if (!figuresFile) {
     reporter.warn('figures.yaml not found.');
   } else {
-    figures = yaml.load(figuresFile) as any;
+    figures = parseYamlWithSchema('figures.yaml', figuresFile, figuresSchema);
     reporter.log(`Loaded ${Object.keys(figures).length} figure items.`);
   }
 
@@ -315,7 +344,7 @@ const createContext = async (
   if (!tablesFile) {
     reporter.warn('tables.yaml not found.');
   } else {
-    tables = yaml.load(tablesFile) as any;
+    tables = parseYamlWithSchema('tables.yaml', tablesFile, tablesSchema);
     for (const [tag, item] of Object.entries(tables)) {
       const file = await findFileMatchingTag(sourceDir, 'Table', tag, [
         'md',

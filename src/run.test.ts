@@ -43,7 +43,7 @@ describe('run', () => {
     await run(
       srcDir,
       outDir,
-      { src: srcDir, out: outDir, text_only: true } as any,
+      { text_only: true } as any,
       reporter as any
     );
     assert.equal(calls.error.length, 0);

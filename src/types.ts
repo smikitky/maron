@@ -1,7 +1,5 @@
 export interface MainOptions {
   init?: boolean;
-  src: string;
-  out: string;
   watch?: boolean;
   verbose?: boolean;
   no_link?: boolean;
@@ -11,8 +9,25 @@ export interface MainOptions {
   help?: boolean;
 }
 
+export interface MaronSourceConfig {
+  src: string;
+  main?: boolean;
+}
+
+export interface MaronConfig {
+  sources: { [name: string]: MaronSourceConfig };
+}
+
+export interface ResolvedSourceEntry {
+  name: string;
+  sourceDir: string;
+  outDir: string;
+  isMain: boolean;
+  routePath: string;
+}
+
 export interface CaptionStyle {
-  position: 'bottom' | 'top';
+  position: 'bottom' | 'top' | 'none';
   format: string;
 }
 
@@ -31,11 +46,11 @@ export interface MaRonStyle {
 
 export interface Issue {
   year: string;
-  month: string | undefined;
-  day: string | undefined;
-  volume: string | undefined;
-  issue: string | undefined;
-  pages: string | [start: number, end: number] | undefined;
+  month?: string | undefined;
+  day?: string | undefined;
+  volume?: string | undefined;
+  issue?: string | undefined;
+  pages?: string | [start: number, end: number] | undefined;
   articleId?: string | undefined;
 }
 
