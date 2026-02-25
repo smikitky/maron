@@ -9,3 +9,5 @@
 /jest.config.js
 tsup.config.ts
 tsconfig*
+AGENTS.md
+*.map
