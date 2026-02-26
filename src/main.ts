@@ -46,20 +46,20 @@ const main = async () => {
   const reporter = createReporter(parsedOptions.verbose);
 
   if (parsedOptions.init) {
-    const src = './src';
     reporter.section('Initializing a New MaRon Project...');
-    reporter.log(`Setting up a new article under ${src}...`);
+    reporter.log('Setting up a new article project in current directory...');
     try {
-      await fs.mkdir(src, { recursive: true });
-      await fs.cp(path.resolve(__dirname, '..', 'init-template'), src, {
+      await fs.cp(path.resolve(__dirname, '..', 'init-template'), '.', {
         recursive: true,
         force: false,
         errorOnExist: true
       });
-      reporter.log(`Created an empty project under ${src}.`);
+      reporter.log('Created a new project with src/ and maron.config.js.');
     } catch (err: any) {
       reporter.error(err.message);
-      reporter.error('Is your src directory empty and writable?');
+      reporter.error(
+        'Do src/ or maron.config.js already exist, and is the directory writable?'
+      );
     }
     return;
   }

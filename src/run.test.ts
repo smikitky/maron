@@ -29,7 +29,7 @@ const createMockReporter = () => {
 };
 
 describe('run', () => {
-  const srcDir = path.resolve(__dirname, '..', 'init-template');
+  const srcDir = path.resolve(__dirname, '..', 'init-template', 'src');
   const outDir = path.resolve(__dirname, '..', 'test-out');
 
   afterEach(async () => {

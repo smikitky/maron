@@ -39,7 +39,7 @@ MaRon is a helper script for writing manuscripts in markdown.
    $ npm install @smikitky/maron
    ```
 
-1. Run the setup script. This will create a directory called `src` in your project and fills it with sample files.
+1. Run the setup script. This will create `src` with sample files and a `maron.config.js` in your project root.
 
    ```bash
    $ npx maron --init
@@ -56,6 +56,7 @@ MaRon is a helper script for writing manuscripts in markdown.
 ## Directory Structure
 
 ```
+maron.config.js
 src/
   index.md
   references.yaml
