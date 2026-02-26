@@ -7,9 +7,11 @@ import { __testing } from './run.ts';
 
 describe('run image cache', () => {
   const createdDirs: string[] = [];
+  const outDirA = '/tmp/out-a';
+  const outDirB = '/tmp/out-b';
 
   afterEach(async () => {
-    __testing.imageBuildCache.clear();
+    __testing.imageBuildCacheByOutDir.clear();
     for (const dir of createdDirs.splice(0)) {
       await fs.rm(dir, { recursive: true, force: true });
     }
@@ -25,7 +27,11 @@ describe('run image cache', () => {
       72,
       'png'
     );
-    const shouldConvert = await __testing.shouldConvertImageOutput(outFile, sig);
+    const shouldConvert = await __testing.shouldConvertImageOutput(
+      outDirA,
+      outFile,
+      sig
+    );
     assert.equal(shouldConvert, true);
   });
 
@@ -40,8 +46,12 @@ describe('run image cache', () => {
       72,
       'png'
     );
-    __testing.imageBuildCache.set(outFile, sig);
-    const shouldConvert = await __testing.shouldConvertImageOutput(outFile, sig);
+    __testing.getImageBuildCache(outDirA).set(outFile, sig);
+    const shouldConvert = await __testing.shouldConvertImageOutput(
+      outDirA,
+      outFile,
+      sig
+    );
     assert.equal(shouldConvert, false);
   });
 
@@ -55,16 +65,33 @@ describe('run image cache', () => {
       72,
       'png'
     );
-    __testing.imageBuildCache.set(outFile, sig);
-    const shouldConvert = await __testing.shouldConvertImageOutput(outFile, sig);
+    __testing.getImageBuildCache(outDirA).set(outFile, sig);
+    const shouldConvert = await __testing.shouldConvertImageOutput(
+      outDirA,
+      outFile,
+      sig
+    );
     assert.equal(shouldConvert, true);
   });
 
-  test('prune removes stale cache entries', () => {
-    __testing.imageBuildCache.set('/tmp/a.png', 'a');
-    __testing.imageBuildCache.set('/tmp/b.png', 'b');
-    __testing.pruneImageBuildCache(new Set(['/tmp/a.png']));
-    assert.equal(__testing.imageBuildCache.has('/tmp/a.png'), true);
-    assert.equal(__testing.imageBuildCache.has('/tmp/b.png'), false);
+  test('prune removes stale cache entries only within same outDir', () => {
+    __testing.getImageBuildCache(outDirA).set('/tmp/a.png', 'a');
+    __testing.getImageBuildCache(outDirA).set('/tmp/b.png', 'b');
+    __testing.getImageBuildCache(outDirB).set('/tmp/c.png', 'c');
+
+    __testing.pruneImageBuildCache(outDirA, new Set(['/tmp/a.png']));
+
+    assert.equal(__testing.getImageBuildCache(outDirA).has('/tmp/a.png'), true);
+    assert.equal(__testing.getImageBuildCache(outDirA).has('/tmp/b.png'), false);
+    assert.equal(__testing.getImageBuildCache(outDirB).has('/tmp/c.png'), true);
+  });
+
+  test('prune on figure-less entry does not drop other entry cache', () => {
+    __testing.getImageBuildCache(outDirA).set('/tmp/fig-1.png', 'sig-a');
+    __testing.pruneImageBuildCache(outDirB, new Set());
+    assert.equal(
+      __testing.getImageBuildCache(outDirA).has('/tmp/fig-1.png'),
+      true
+    );
   });
 });

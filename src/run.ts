@@ -33,7 +33,16 @@ import type {
 import type { ZodType } from 'zod';
 
 const __dirname = import.meta.dirname;
-const imageBuildCache = new Map<string, string>();
+const imageBuildCacheByOutDir = new Map<string, Map<string, string>>();
+
+const getImageBuildCache = (outDir: string) => {
+  let cache = imageBuildCacheByOutDir.get(outDir);
+  if (!cache) {
+    cache = new Map<string, string>();
+    imageBuildCacheByOutDir.set(outDir, cache);
+  }
+  return cache;
+};
 
 const backticks = replaceBacktick();
 const md = MarkdownIt({ html: true })
@@ -174,19 +183,22 @@ const fileExists = async (file: string) => {
 };
 
 const shouldConvertImageOutput = async (
+  outDir: string,
   outFile: string,
   signature: string
 ) => {
-  const cached = imageBuildCache.get(outFile);
+  const cache = getImageBuildCache(outDir);
+  const cached = cache.get(outFile);
   if (cached !== signature) return true;
   const exists = await fileExists(outFile);
   return !exists;
 };
 
-const pruneImageBuildCache = (usedOutputs: Set<string>) => {
-  for (const outFile of imageBuildCache.keys()) {
+const pruneImageBuildCache = (outDir: string, usedOutputs: Set<string>) => {
+  const cache = getImageBuildCache(outDir);
+  for (const outFile of cache.keys()) {
     if (!usedOutputs.has(outFile)) {
-      imageBuildCache.delete(outFile);
+      cache.delete(outFile);
     }
   }
 };
@@ -226,7 +238,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
         'tiff'
       );
       usedOutputs.add(tiffOut);
-      if (await shouldConvertImageOutput(tiffOut, tiffSignature)) {
+      if (await shouldConvertImageOutput(outDir, tiffOut, tiffSignature)) {
         const tiffOutBuf = await convertImage(createReadStream(inFile), {
           resolution: tiffResolution,
           outType: 'tiff'
@@ -237,7 +249,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
       } else {
         skippedCount++;
       }
-      imageBuildCache.set(tiffOut, tiffSignature);
+      getImageBuildCache(outDir).set(tiffOut, tiffSignature);
 
       const pngOut = path.join(outDir, `fig-${index}${postfix}.png`);
       const pngResolution =
@@ -253,7 +265,7 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
         'png'
       );
       usedOutputs.add(pngOut);
-      if (await shouldConvertImageOutput(pngOut, pngSignature)) {
+      if (await shouldConvertImageOutput(outDir, pngOut, pngSignature)) {
         const pngOutBuf = await convertImage(createReadStream(inFile), {
           resolution: pngResolution,
           outType: 'png'
@@ -264,10 +276,10 @@ const convertImages = async (ctx: MaRonContext, reporter: Reporter) => {
       } else {
         skippedCount++;
       }
-      imageBuildCache.set(pngOut, pngSignature);
+      getImageBuildCache(outDir).set(pngOut, pngSignature);
     }
   }
-  pruneImageBuildCache(usedOutputs);
+  pruneImageBuildCache(outDir, usedOutputs);
   reporter.log(
     `Converted ${convertedCount} output image(s), skipped ${skippedCount}.`
   );
@@ -408,7 +420,8 @@ export default run;
 
 export const __testing = {
   createImageBuildSignature,
+  getImageBuildCache,
   shouldConvertImageOutput,
   pruneImageBuildCache,
-  imageBuildCache
+  imageBuildCacheByOutDir
 };
